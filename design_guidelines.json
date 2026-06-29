@@ -1,0 +1,120 @@
+{
+  "project": "FloForge Automations",
+  "theme": "Dark",
+  "archetype": "Archetype 5 (Luxury) merged with Archetype 4 (High-Contrast Tech)",
+  "design_philosophy": "A bold, trustworthy, and futuristic B2B landing page. Focuses on premium, moody tech-aesthetics avoiding generic SaaS templates. Uses CSS 3D perspectives, glassmorphism, and neon-emerald accents to convey precision and automation.",
+  "typography": {
+    "headings": {
+      "family": "Manrope, sans-serif",
+      "weight": "800",
+      "tracking": "tracking-tighter",
+      "usage": "Hero H1, section titles, button texts. Avoid center alignment for major headings."
+    },
+    "body": {
+      "family": "Inter, sans-serif",
+      "weight": "400",
+      "tracking": "tracking-normal",
+      "usage": "Subparagraphs, form labels, minor UI text."
+    },
+    "scale": {
+      "h1": "text-5xl sm:text-6xl lg:text-[4rem] leading-none",
+      "subtitle": "text-lg sm:text-xl text-slate-300 leading-relaxed",
+      "button": "text-base font-semibold"
+    }
+  },
+  "colors": {
+    "backgrounds": {
+      "primary": "#0F172A",
+      "secondary": "#312E81",
+      "glass": "rgba(15, 23, 42, 0.6)",
+      "card_glass": "rgba(255, 255, 255, 0.03)"
+    },
+    "text": {
+      "light": "#F8FAFC",
+      "muted": "#94A3B8",
+      "dark": "#000000"
+    },
+    "accents": {
+      "primary": "#5B21B6",
+      "primary_hover": "#4C1D95",
+      "success": "#10B981",
+      "success_glow": "rgba(16, 185, 129, 0.3)"
+    },
+    "borders": {
+      "glass": "rgba(255, 255, 255, 0.1)",
+      "glass_highlight": "rgba(255, 255, 255, 0.2)"
+    }
+  },
+  "layout_strategy": {
+    "container": "max-w-7xl mx-auto px-6 lg:px-8",
+    "hero_grid": "grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center min-h-[85vh] pt-32 pb-20",
+    "left_content": "col-span-1 lg:col-span-5 flex flex-col items-start space-y-8",
+    "right_visual": "col-span-1 lg:col-span-7 relative h-full min-h-[500px]"
+  },
+  "components": {
+    "navbar": {
+      "type": "Sticky Header",
+      "classes": "fixed top-0 w-full z-50 backdrop-blur-xl bg-[#0F172A]/70 border-b border-white/5 transition-all duration-300",
+      "layout": "flex justify-between items-center h-20 px-6 lg:px-12",
+      "logo": "text-xl font-extrabold font-manrope text-white tracking-tight",
+      "links": "hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300",
+      "cta": "bg-[#5B21B6] hover:bg-[#4C1D95] text-white px-5 py-2.5 rounded-md transition-all shadow-[0_0_15px_rgba(91,33,182,0.4)] hover:shadow-[0_0_25px_rgba(91,33,182,0.6)]"
+    },
+    "hero_content": {
+      "headline": "Stop Losing Leads. Start Running Smarter.",
+      "subparagraph": "FloForge Automations helps contractors and local businesses organize leads, automate follow-ups, and build simple systems that keep daily operations running smoothly.",
+      "ctas": {
+        "primary": "Start Now - bg-[#5B21B6] hover:bg-[#4C1D95] text-white px-8 py-4 rounded-lg shadow-[0_4px_20px_rgba(91,33,182,0.4)] hover:shadow-[0_4px_30px_rgba(91,33,182,0.6)] hover:-translate-y-1 transition-all duration-300 font-manrope",
+        "secondary": "Let's Talk - border border-white/20 hover:border-white/60 bg-transparent text-white px-8 py-4 rounded-lg hover:-translate-y-1 transition-all duration-300 font-manrope backdrop-blur-sm"
+      }
+    },
+    "hero_3d_visual": {
+      "wrapper_classes": "w-full h-full perspective-[1200px] flex justify-center items-center",
+      "container_classes": "relative w-full max-w-lg transform-style-preserve-3d rotate-x-[8deg] rotate-y-[-12deg] hover:rotate-x-[5deg] hover:rotate-y-[-8deg] transition-transform duration-700 ease-out",
+      "dashboard_base": "w-full h-[400px] bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden",
+      "floating_cards": [
+        { "label": "New Lead", "classes": "absolute top-8 -left-8 bg-[#0F172A]/80 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl transform translate-z-[40px] animate-float-slow flex items-center gap-3", "icon_color": "text-[#5B21B6]" },
+        { "label": "Follow-Up Task", "classes": "absolute top-32 right-[-20px] bg-[#312E81]/80 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl transform translate-z-[60px] animate-float-medium flex items-center gap-3", "icon_color": "text-[#10B981]" },
+        { "label": "Estimate Sent", "classes": "absolute bottom-32 left-12 bg-[#0F172A]/90 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl transform translate-z-[30px] animate-float-fast flex items-center gap-3", "icon_color": "text-[#5B21B6]" },
+        { "label": "Closed Won", "classes": "absolute bottom-8 right-8 bg-[#10B981]/20 backdrop-blur-xl border border-[#10B981]/50 p-4 rounded-xl shadow-[0_10px_30px_rgba(16,185,129,0.2)] transform translate-z-[80px] animate-float-slow flex items-center gap-3", "icon_color": "text-[#10B981]" }
+      ],
+      "connector_lines": "SVG overlay positioned absolutely within the 3D container. Paths connecting cards using stroke='url(#purple-emerald-gradient)' stroke-width='2' with stroke-dasharray animation to simulate data flow. Add drop-shadow to the SVG paths for glow.",
+      "particles": "Absolute positioned small div dots (w-1 h-1 rounded-full bg-white/40) using Framer Motion to slowly drift upwards, creating atmospheric depth."
+    },
+    "contact_form_lead_capture": {
+      "strategy": "Shadcn UI Form deeply customized. Dark luxury aesthetics. Avoid native inputs.",
+      "trigger": "Can be triggered via 'Let's Talk' CTA opening a customized Shadcn Dialog (Modal) with glassmorphism overlay.",
+      "container_classes": "bg-[#0F172A] border border-white/10 rounded-xl p-8 shadow-2xl max-w-md w-full",
+      "inputs": "bg-black/20 border-white/10 focus-visible:ring-[#5B21B6] focus-visible:border-[#5B21B6] text-white placeholder:text-slate-500 rounded-lg h-12",
+      "button": "w-full h-12 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-manrope tracking-wide shadow-lg rounded-lg transition-colors mt-4",
+      "fields": ["Full Name", "Company Name", "Email Address", "Biggest Bottleneck (Dropdown: Leads, Follow-ups, Operations)"]
+    }
+  },
+  "motion_and_interactions": {
+    "hero_entrance": "Framer motion staggered entrance. Text content fades in and slides up (y: 20 -> 0) with a 0.1s stagger. Dashboard base scales up (0.95 -> 1) and fades in.",
+    "floating_loop": "Use Framer Motion or CSS keyframes to animate 'y' property of floating cards indefinitely. Vary the durations (e.g., 4s, 5s, 6s) and delays so they move out of sync.",
+    "connector_pulse": "CSS animation on SVG stroke-dashoffset to create moving light along the paths.",
+    "button_hover": "Scale 1.05, shadow intensity increase, slight translate-y negative."
+  },
+  "media_and_assets": {
+    "background_texture": {
+      "url": "https://images.pexels.com/photos/7598772/pexels-photo-7598772.jpeg",
+      "usage": "Set as a fixed, absolutely positioned background layer behind the hero section with mix-blend-overlay and opacity-5 to add premium, gritty texture to the Deep Navy background, preventing 'flat SaaS' look."
+    }
+  },
+  "testing_attributes": {
+    "conventions": "All interactive and key informational elements MUST include a data-testid attribute in kebab-case format based on role.",
+    "examples": {
+      "start_now_button": "data-testid='hero-primary-cta'",
+      "lets_talk_button": "data-testid='hero-secondary-cta'",
+      "contact_form_submit": "data-testid='contact-form-submit'",
+      "navbar_links": "data-testid='navbar-link-{name}'"
+    }
+  },
+  "e1_specific_rules": {
+    "border_radius": "Concentric and subtle. Use rounded-lg for buttons, rounded-xl for floating cards, rounded-2xl for main dashboard base.",
+    "spacing": "Generous spacing. Use gap-12 between text and visual on desktop. Avoid tight clustering.",
+    "typography_tension": "Contrast the ultra-bold Manrope H1 with the precise, neutral Inter body text. Never center the left-column text.",
+    "shadows": "Layered ambient shadows. Avoid solid drop shadows. Use multiple layers e.g. shadow-[0_8px_30px_rgb(0,0,0,0.12)] for realistic depth."
+  }
+}
