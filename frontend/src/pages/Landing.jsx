@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import HowItWorks from "@/components/HowItWorks";
 import Industries from "@/components/Industries";
+import WhyFloForge from "@/components/WhyFloForge";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function Landing() {
@@ -13,6 +14,7 @@ export default function Landing() {
       <Services />
       <HowItWorks />
       <Industries />
+      <WhyFloForge />
       <Toaster position="top-center" />
     </main>
   );
