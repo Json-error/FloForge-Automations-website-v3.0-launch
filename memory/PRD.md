@@ -20,6 +20,7 @@ Hero-only landing page; CSS/Framer 3D visual; working contact form storing leads
 - Hero, navbar, 3D dashboard visual: done.
 - Lead-capture form end-to-end (3 CTA triggers, validation, persistence): verified 100% by testing agent (iteration_1).
 - **Services section (2026-06-29)**: OUR SERVICES label, "Build a Business That Runs Smarter" heading + intro, 5 glassmorphism cards in asymmetrical grid with scroll-reveal stagger, cursor-tilt 3D, purple edge glow, hover-expand details; sticky "Built for Growing Businesses" control-center panel with animated checklist + Start Now CTA (reuses ContactDialog). Grid/particles/connector-line ambiance. Compiles clean; CTA flow already verified.
+- **How It Works section (2026-06-29)**: HOW IT WORKS label, "From Business Chaos to Organized Growth" heading + intro, 4-step horizontal workflow (Discover/Design/Automate/Optimize) with illuminating left-to-right connector line, scroll-reveal + hover lift, node dots. Before/After transformation panels (red struck-through chaos → emerald organized system) with animated reveals + FloForge arrow. Closing statement + "Schedule a Free Consultation" CTA (reuses ContactDialog). Compiles clean.
 
 ## Backlog
 - **P1**: Build full sections — Services, How It Works, Industries, Results, Contact, Footer.
