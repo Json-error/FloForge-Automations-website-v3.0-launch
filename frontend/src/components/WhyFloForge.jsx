@@ -89,7 +89,7 @@ const Widget = ({ Icon, label, children, delay = 0, accent = "#5B21B6" }) => (
 export const WhyFloForge = () => {
   return (
     <section
-      id="results"
+      id="why"
       data-testid="why-section"
       className="relative overflow-hidden bg-[#0F172A] py-24 lg:py-32 border-t border-white/5"
     >
