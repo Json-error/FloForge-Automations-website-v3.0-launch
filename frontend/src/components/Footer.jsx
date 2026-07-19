@@ -73,6 +73,9 @@ export const Footer = () => {
                   <a href={`#${l.id}`} data-testid={`footer-link-${l.id}`} className="text-sm text-slate-400 hover:text-white transition-colors">{l.name}</a>
                 </li>
               ))}
+              <li>
+                <Link to="/pricing" data-testid="footer-link-pricing" className="text-sm text-slate-400 hover:text-white transition-colors">Pricing</Link>
+              </li>
             </ul>
           </div>
 

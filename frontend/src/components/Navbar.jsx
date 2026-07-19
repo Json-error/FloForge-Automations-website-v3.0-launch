@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import ContactDialog from "@/components/ContactDialog";
@@ -75,6 +76,13 @@ export const Navbar = () => {
               {l.name}
             </a>
           ))}
+          <Link
+            to="/pricing"
+            data-testid="navbar-link-pricing"
+            className="text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200"
+          >
+            Pricing
+          </Link>
         </div>
 
         <div className="hidden md:block">
@@ -117,6 +125,13 @@ export const Navbar = () => {
               {l.name}
             </a>
           ))}
+          <Link
+            to="/pricing"
+            onClick={() => setMobileOpen(false)}
+            className="text-slate-300 hover:text-white text-sm font-medium"
+          >
+            Pricing
+          </Link>
           <ContactDialog
             trigger={
               <button className="bg-[#5B21B6] text-white text-sm font-semibold font-manrope px-5 py-2.5 rounded-md w-full">
