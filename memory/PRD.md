@@ -39,5 +39,11 @@ Complete multi-section landing page + Privacy Policy route. All sections share o
 - Nav anchors: `#services #how-it-works #industries #results #contact`. `#results` = light Results section; former "why" section id renamed to `#why`.
 
 ## Backlog (updated)
-- P2: Admin dashboard to view captured leads; email notification on new lead (Resend).
+- P2: Admin dashboard to view captured leads & payments; email notification on new lead (Resend).
 - P2: Real Terms page; wire social links when accounts exist; restrict CORS in prod.
+
+## Stripe Payments (2026-06-29) — Flow A claimable sandbox
+- 3 packages via `setup_stripe.py` lookup_keys: `starter_setup_onetime` ($299 one-time), `business_automation_onetime` ($699 one-time), `growth_partnership_monthly` ($149/mo subscription).
+- Backend `server.py`: `POST /api/payments/checkout` (mode auto: payment vs subscription), `GET /api/payments/status/{session_id}` (poll + Stripe fallback), `POST /api/stripe/webhook` (idempotent). `payment_transactions` in Mongo, inserted before redirect. TAX_MODE="full" (Stripe-managed / SMP).
+- Frontend routes: `/pricing` (3-tier premium cards + limited-offer banner), `/payment/success` (polls status), `/payment/cancel`. Pricing linked in navbar + footer. Sends only {lookup_key, origin_url}.
+- Verified 13/13 backend + frontend 100% (iteration_2). Sandbox account: acct_1TuyTXPj4yk2TVe4.
