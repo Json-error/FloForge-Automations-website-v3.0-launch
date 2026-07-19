@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import LoadingScreen from "@/components/LoadingScreen";
 import Services from "@/components/Services";
 import HowItWorks from "@/components/HowItWorks";
 import Industries from "@/components/Industries";
@@ -13,6 +14,7 @@ import { Toaster } from "@/components/ui/sonner";
 export default function Landing() {
   return (
     <main className="relative min-h-screen bg-[#0F172A] text-[#F8FAFC] antialiased">
+      <LoadingScreen />
       <Navbar />
       <Hero />
       <Services />

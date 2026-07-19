@@ -29,3 +29,15 @@ Hero-only landing page; CSS/Framer 3D visual; working contact form storing leads
 
 ## Next Tasks
 Build out the remaining sections (Services → Contact) when the user is ready.
+
+## Full Site Status (2026-06-29)
+Complete multi-section landing page + Privacy Policy route. All sections share one glassmorphism design system (dark theme with a light Off-White Results section for rhythm):
+- **Hero, Services, How It Works, Industries, Automation Engine, Why FloForge, Results, Contact, Footer** — all wired in `pages/Landing.jsx`.
+- **Routing**: `react-router-dom` — `/` (Landing), `/privacy` (PrivacyPolicy with 7 sections: info collected, form use, cookies, third-party, retention, rights, contact).
+- **Shared `LeadForm`** used by the modal `ContactDialog` (all CTAs) and the inline Contact section → `POST /api/leads` (MongoDB). Verified 100% in iteration_2 (dialog + inline + persistence).
+- **Polish pass**: loading screen (logo + assembling ring), global smooth scroll + scroll-padding, `prefers-reduced-motion` disables ambient animations, navbar active-section highlight via IntersectionObserver + scroll opacity/blur, footer with mission/contact/social placeholders/privacy link/animated top line.
+- Nav anchors: `#services #how-it-works #industries #results #contact`. `#results` = light Results section; former "why" section id renamed to `#why`.
+
+## Backlog (updated)
+- P2: Admin dashboard to view captured leads; email notification on new lead (Resend).
+- P2: Real Terms page; wire social links when accounts exist; restrict CORS in prod.

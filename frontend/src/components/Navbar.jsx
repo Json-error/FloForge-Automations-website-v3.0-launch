@@ -14,11 +14,24 @@ const LINKS = [
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [active, setActive] = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const ids = ["services", "how-it-works", "industries", "results", "contact"];
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); });
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+    ids.forEach((id) => { const el = document.getElementById(id); if (el) obs.observe(el); });
+    return () => obs.disconnect();
   }, []);
 
   return (
@@ -53,7 +66,11 @@ export const Navbar = () => {
               key={l.id}
               href={`#${l.id}`}
               data-testid={`navbar-link-${l.id}`}
-              className="text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200 relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-[#5B21B6] hover:after:w-full after:transition-all after:duration-300"
+              className={`text-sm font-medium transition-colors duration-200 relative after:absolute after:left-0 after:-bottom-1 after:h-px after:bg-[#5B21B6] after:transition-all after:duration-300 ${
+                active === l.id
+                  ? "text-white after:w-full"
+                  : "text-slate-300 hover:text-white after:w-0 hover:after:w-full"
+              }`}
             >
               {l.name}
             </a>

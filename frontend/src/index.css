@@ -13,6 +13,25 @@ body {
     color: #F8FAFC;
 }
 
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+}
+
+/* Reduced motion: disable ambient/heavy animations */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+    .animate-float-slow, .animate-float-medium, .animate-float-fast,
+    .animate-float-hero, .animate-glow-pulse, .connector-flow {
+        animation: none !important;
+    }
+}
+
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
