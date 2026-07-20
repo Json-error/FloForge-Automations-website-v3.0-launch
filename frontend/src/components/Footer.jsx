@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { Mail, Linkedin, Facebook, Instagram, Twitter } from "lucide-react";
+import { Mail, Phone, Linkedin, Facebook, Instagram, Twitter } from "lucide-react";
 import ContactDialog from "@/components/ContactDialog";
+import { LogoMark } from "@/components/Logo";
 
 const NAV = [
   { name: "Services", id: "services" },
@@ -41,9 +42,7 @@ export const Footer = () => {
           {/* brand */}
           <div className="md:col-span-2">
             <a href="#top" className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#5B21B6] shadow-[0_0_18px_rgba(91,33,182,0.6)]">
-                <span className="h-3 w-3 rounded-sm bg-[#10B981]" />
-              </span>
+              <LogoMark size={32} />
               <span className="text-lg font-extrabold font-manrope tracking-tight text-white">
                 FloForge <span className="text-slate-400 font-semibold">Automations</span>
               </span>
@@ -52,8 +51,11 @@ export const Footer = () => {
               Reliable systems that organize your leads, automate your follow-ups, and keep
               your business running smoothly—so you can focus on growth, not paperwork.
             </p>
-            <a href="mailto:hello@floforge.io" data-testid="footer-email" className="mt-5 inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
-              <Mail size={15} className="text-[#10B981]" /> hello@floforge.io
+            <a href="mailto:datatype.json@gmail.com" data-testid="footer-email" className="mt-5 inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
+              <Mail size={15} className="text-[#10B981]" /> datatype.json@gmail.com
+            </a>
+            <a href="tel:+19282354586" data-testid="footer-phone" className="mt-2 flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
+              <Phone size={15} className="text-[#10B981]" /> (928)-235-4586
             </a>
             <div className="mt-6">
               <ContactDialog trigger={

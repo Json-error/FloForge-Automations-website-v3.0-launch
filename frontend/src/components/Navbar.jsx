@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import ContactDialog from "@/components/ContactDialog";
+import { BrandLogo } from "@/components/Logo";
 
 const LINKS = [
   { name: "Services", id: "services" },
@@ -53,12 +54,7 @@ export const Navbar = () => {
           data-testid="navbar-logo"
           className="flex items-center gap-2.5 group"
         >
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[#5B21B6] shadow-[0_0_18px_rgba(91,33,182,0.6)]">
-            <span className="h-3 w-3 rounded-sm bg-[#10B981]" />
-          </span>
-          <span className="text-lg font-extrabold font-manrope tracking-tight text-white">
-            FloForge <span className="text-slate-400 font-semibold">Automations</span>
-          </span>
+          <BrandLogo size={34} />
         </a>
 
         <div className="hidden md:flex items-center space-x-8">

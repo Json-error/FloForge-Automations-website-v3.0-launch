@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
+import { LogoMark } from "@/components/Logo";
 
 const SECTIONS = [
   { h: "Information We Collect", p: "When you use our website or submit our contact form, we collect the details you choose to share with us—typically your name, company name, email address, and a short note about your biggest operational bottleneck. We may also collect basic, non-identifying technical information such as browser type and general usage data to help us improve the site." },
@@ -23,9 +24,7 @@ export default function PrivacyPolicy() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0F172A]/80 border-b border-white/10">
         <div className="max-w-4xl mx-auto flex items-center justify-between h-20 px-6">
           <Link to="/" className="flex items-center gap-2.5" data-testid="privacy-logo">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#5B21B6] shadow-[0_0_18px_rgba(91,33,182,0.6)]">
-              <span className="h-3 w-3 rounded-sm bg-[#10B981]" />
-            </span>
+            <LogoMark size={32} />
             <span className="text-lg font-extrabold font-manrope tracking-tight text-white">
               FloForge <span className="text-slate-400 font-semibold">Automations</span>
             </span>

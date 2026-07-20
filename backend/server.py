@@ -5,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 import stripe
+import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
@@ -25,6 +26,46 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or "sk_test_emergent"
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 # Digital services in an SMP-supported country (US) -> Stripe manages tax (SMP)
 TAX_MODE = "full"
+
+# HubSpot configuration
+HUBSPOT_ACCESS_TOKEN = os.environ.get("HUBSPOT_ACCESS_TOKEN", "")
+HUBSPOT_BASE_URL = "https://api.hubapi.com"
+
+
+async def sync_lead_to_hubspot(lead: "LeadCreate"):
+    """Upsert a lead as a HubSpot contact. Never raises: failures are logged only."""
+    if not HUBSPOT_ACCESS_TOKEN:
+        return False, "HubSpot not configured"
+    headers = {
+        "Authorization": f"Bearer {HUBSPOT_ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    parts = lead.full_name.strip().split(" ", 1)
+    firstname = parts[0]
+    lastname = parts[1] if len(parts) > 1 else ""
+    payload = {
+        "idProperty": "email",
+        "inputs": [{
+            "id": lead.email,
+            "properties": {
+                "email": lead.email,
+                "firstname": firstname,
+                "lastname": lastname,
+                "company": lead.company_name,
+            },
+        }],
+    }
+    try:
+        async with httpx.AsyncClient(base_url=HUBSPOT_BASE_URL, timeout=10) as hc:
+            resp = await hc.post("/crm/v3/objects/contacts/batch/upsert",
+                                 json=payload, headers=headers)
+            if resp.status_code >= 400:
+                logger.warning("HubSpot upsert failed: %s %s", resp.status_code, resp.text)
+                return False, f"HubSpot error {resp.status_code}"
+            return True, None
+    except Exception as exc:
+        logger.warning("HubSpot sync error: %s", exc)
+        return False, str(exc)
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -89,6 +130,9 @@ async def create_lead(input: LeadCreate):
     lead = Lead(**input.model_dump())
     doc = lead.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    synced, hs_err = await sync_lead_to_hubspot(input)
+    doc['hubspot_synced'] = synced
+    doc['hubspot_error'] = hs_err
     await db.leads.insert_one(doc)
     return lead
 

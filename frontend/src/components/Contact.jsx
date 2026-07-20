@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Mail, MapPin, Clock, ShieldCheck } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, ShieldCheck } from "lucide-react";
 import LeadForm from "@/components/LeadForm";
 
 const HIGHLIGHTS = [
@@ -44,9 +44,14 @@ export const Contact = () => {
             ))}
           </div>
 
-          <a href="mailto:hello@floforge.io" data-testid="contact-email" className="mt-8 inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
-            <Mail size={16} className="text-[#10B981]" /> hello@floforge.io
-          </a>
+          <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+            <a href="mailto:datatype.json@gmail.com" data-testid="contact-email" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
+              <Mail size={16} className="text-[#10B981]" /> datatype.json@gmail.com
+            </a>
+            <a href="tel:+19282354586" data-testid="contact-phone" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
+              <Phone size={16} className="text-[#10B981]" /> (928)-235-4586
+            </a>
+          </div>
         </motion.div>
 
         {/* right: form */}

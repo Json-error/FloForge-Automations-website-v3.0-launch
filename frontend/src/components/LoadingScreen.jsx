@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { LogoMark } from "@/components/Logo";
 
 export const LoadingScreen = () => {
   const [show, setShow] = useState(true);
@@ -40,9 +41,7 @@ export const LoadingScreen = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5B21B6] shadow-[0_0_20px_rgba(91,33,182,0.7)]">
-                <span className="h-3.5 w-3.5 rounded-sm bg-[#10B981]" />
-              </span>
+              <LogoMark size={40} />
             </motion.div>
           </div>
           <motion.p
