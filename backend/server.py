@@ -31,6 +31,53 @@ TAX_MODE = "full"
 HUBSPOT_ACCESS_TOKEN = os.environ.get("HUBSPOT_ACCESS_TOKEN", "")
 HUBSPOT_BASE_URL = "https://api.hubapi.com"
 
+# Emergent-managed email (Resend)
+EMAIL_BASE_URL = "https://integrations.emergentagent.com"
+EMERGENT_EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY", "")
+EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "FloForge Automations")
+LEAD_NOTIFY_EMAIL = os.environ.get("LEAD_NOTIFY_EMAIL", "")
+
+
+async def send_lead_notification_email(lead: "LeadCreate"):
+    """Email the business owner about a new lead. Never raises."""
+    if not EMERGENT_EMAIL_KEY or not LEAD_NOTIFY_EMAIL:
+        return False, "Email not configured"
+    html = f"""
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F172A;padding:24px;font-family:Arial,sans-serif;">
+      <tr><td>
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#111827;border:1px solid #312E81;border-radius:12px;overflow:hidden;">
+          <tr><td style="background:#5B21B6;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold;">New Lead — FloForge Automations</td></tr>
+          <tr><td style="padding:28px;color:#E2E8F0;">
+            <p style="margin:0 0 18px;font-size:15px;color:#94A3B8;">You have a new contact form submission:</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#F8FAFC;">
+              <tr><td style="padding:8px 0;color:#94A3B8;width:150px;">Name</td><td style="padding:8px 0;font-weight:bold;">{lead.full_name}</td></tr>
+              <tr><td style="padding:8px 0;color:#94A3B8;">Company</td><td style="padding:8px 0;font-weight:bold;">{lead.company_name}</td></tr>
+              <tr><td style="padding:8px 0;color:#94A3B8;">Email</td><td style="padding:8px 0;font-weight:bold;">{lead.email}</td></tr>
+              <tr><td style="padding:8px 0;color:#94A3B8;">Biggest Bottleneck</td><td style="padding:8px 0;font-weight:bold;">{lead.bottleneck}</td></tr>
+            </table>
+            <p style="margin:24px 0 0;font-size:13px;color:#10B981;">Reply directly to this email to reach {lead.full_name}.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+    """
+    payload = {
+        "to": [LEAD_NOTIFY_EMAIL],
+        "subject": f"New Lead: {lead.full_name} — {lead.company_name}",
+        "html": html,
+        "from_name": EMAIL_FROM_NAME,
+        "contact_email": lead.email,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30) as ec:
+            resp = await ec.post(f"{EMAIL_BASE_URL}/api/v1/email/send",
+                                 headers={"X-Email-Key": EMERGENT_EMAIL_KEY}, json=payload)
+            resp.raise_for_status()
+            return True, None
+    except Exception as exc:
+        logger.warning("Lead notification email failed: %s", exc)
+        return False, str(exc)
+
 
 async def sync_lead_to_hubspot(lead: "LeadCreate"):
     """Upsert a lead as a HubSpot contact. Never raises: failures are logged only."""
@@ -133,6 +180,9 @@ async def create_lead(input: LeadCreate):
     synced, hs_err = await sync_lead_to_hubspot(input)
     doc['hubspot_synced'] = synced
     doc['hubspot_error'] = hs_err
+    emailed, em_err = await send_lead_notification_email(input)
+    doc['email_sent'] = emailed
+    doc['email_error'] = em_err
     await db.leads.insert_one(doc)
     return lead
 
