@@ -44,8 +44,8 @@ async def sync_lead_to_hubspot(lead: "LeadCreate"):
     firstname = parts[0]
     lastname = parts[1] if len(parts) > 1 else ""
     payload = {
-        "idProperty": "email",
         "inputs": [{
+            "idProperty": "email",
             "id": lead.email,
             "properties": {
                 "email": lead.email,
