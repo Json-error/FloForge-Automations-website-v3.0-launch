@@ -12,6 +12,13 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 
+from platform_api import (
+    router as platform_router,
+    seed_and_index,
+    TIER_META,
+    deliverables_for,
+)
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -39,7 +46,6 @@ LEAD_NOTIFY_EMAIL = os.environ.get("LEAD_NOTIFY_EMAIL", "")
 
 
 async def send_lead_notification_email(lead: "LeadCreate"):
-    """Email the business owner about a new lead. Never raises."""
     if not EMERGENT_EMAIL_KEY or not LEAD_NOTIFY_EMAIL:
         return False, "Email not configured"
     html = f"""
@@ -113,6 +119,25 @@ async def sync_lead_to_hubspot(lead: "LeadCreate"):
     except Exception as exc:
         logger.warning("HubSpot sync error: %s", exc)
         return False, str(exc)
+
+
+async def send_payment_email(to, tier_name, amount_cents, currency, buyer=None):
+    """Notify about a completed payment. Never raises."""
+    if not EMERGENT_EMAIL_KEY or not to:
+        return
+    amt = f"{(amount_cents or 0) / 100:,.2f} {str(currency).upper()}"
+    who = f"<p>Buyer: <b>{buyer}</b></p>" if buyer else ""
+    html = (f"<div style='font-family:Arial,sans-serif;background:#0F172A;padding:24px;color:#F8FAFC;'>"
+            f"<h2 style='color:#10B981;'>Payment received 🎉</h2>"
+            f"<p>Package: <b>{tier_name}</b></p><p>Amount: <b>{amt}</b></p>{who}</div>")
+    try:
+        async with httpx.AsyncClient(timeout=20) as ec:
+            await ec.post(f"{EMAIL_BASE_URL}/api/v1/email/send",
+                          headers={"X-Email-Key": EMERGENT_EMAIL_KEY},
+                          json={"to": [to], "subject": f"Payment received — {tier_name}",
+                                "html": html, "from_name": EMAIL_FROM_NAME})
+    except Exception as exc:
+        logger.warning("Payment email failed: %s", exc)
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -253,13 +278,21 @@ async def get_payment_status(session_id: str):
         try:
             s = stripe.checkout.Session.retrieve(session_id)
             if s.payment_status == "paid" or s.status == "complete":
+                cust_email = (s.get("customer_details") or {}).get("email")
+                meta = TIER_META.get(record.get("lookup_key"), {})
                 await db.payment_transactions.update_one(
                     {"session_id": session_id, "payment_status": {"$ne": "paid"}},
                     {"$set": {"status": "completed", "payment_status": "paid",
                               "stripe_subscription_id": s.subscription,
                               "stripe_payment_intent_id": s.payment_intent,
+                              "customer_email": (cust_email or "").lower() or None,
+                              "tier_name": meta.get("name"),
+                              "deliverables": deliverables_for(record.get("lookup_key")),
                               "updated_at": datetime.now(timezone.utc).isoformat()}},
                 )
+                if cust_email:
+                    await send_payment_email(cust_email, meta.get("name", "your package"),
+                                             record.get("amount", 0), record.get("currency", "usd"))
                 record = await db.payment_transactions.find_one({"session_id": session_id})
         except stripe.error.StripeError:
             pass
@@ -278,12 +311,23 @@ async def stripe_webhook(request: Request):
     obj, t = event["data"]["object"], event["type"]
     now = datetime.now(timezone.utc).isoformat()
     if t == "checkout.session.completed":
+        rec = await db.payment_transactions.find_one({"session_id": obj["id"]})
+        meta = TIER_META.get((rec or {}).get("lookup_key"), {})
+        cust_email = (obj.get("customer_details") or {}).get("email")
         await db.payment_transactions.update_one(
             {"session_id": obj["id"], "payment_status": {"$ne": "paid"}},
             {"$set": {"status": "completed", "payment_status": obj.get("payment_status", "paid"),
                       "stripe_subscription_id": obj.get("subscription"),
-                      "stripe_payment_intent_id": obj.get("payment_intent"), "updated_at": now}},
+                      "stripe_payment_intent_id": obj.get("payment_intent"),
+                      "customer_email": (cust_email or "").lower() or None,
+                      "tier_name": meta.get("name"),
+                      "deliverables": deliverables_for((rec or {}).get("lookup_key")),
+                      "updated_at": now}},
         )
+        if cust_email and LEAD_NOTIFY_EMAIL:
+            await send_payment_email(LEAD_NOTIFY_EMAIL, meta.get("name", "a package"),
+                                     (rec or {}).get("amount", 0), (rec or {}).get("currency", "usd"),
+                                     buyer=cust_email)
     elif t == "checkout.session.async_payment_succeeded":
         await db.payment_transactions.update_one({"session_id": obj["id"]},
             {"$set": {"payment_status": "paid", "updated_at": now}})
@@ -301,6 +345,15 @@ async def stripe_webhook(request: Request):
 
 # Include the router in the main app
 app.include_router(api_router)
+app.include_router(platform_router)
+
+
+@app.on_event("startup")
+async def _startup():
+    try:
+        await seed_and_index()
+    except Exception as exc:
+        logging.getLogger(__name__).warning("seed_and_index failed: %s", exc)
 
 app.add_middleware(
     CORSMiddleware,

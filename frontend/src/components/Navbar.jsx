@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import ContactDialog from "@/components/ContactDialog";
 import { BrandLogo } from "@/components/Logo";
+import { useAuth } from "@/context/AuthContext";
 
 const LINKS = [
   { name: "Services", id: "services" },
@@ -17,6 +18,8 @@ export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState("");
+  const { user } = useAuth();
+  const dashHref = user && user.role === "admin" ? "/admin" : "/dashboard";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -81,7 +84,14 @@ export const Navbar = () => {
           </Link>
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-3">
+          <Link
+            to={user ? dashHref : "/login"}
+            data-testid="navbar-auth-link"
+            className="text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200"
+          >
+            {user ? "Dashboard" : "Sign In"}
+          </Link>
           <ContactDialog
             trigger={
               <button
@@ -127,6 +137,13 @@ export const Navbar = () => {
             className="text-slate-300 hover:text-white text-sm font-medium"
           >
             Pricing
+          </Link>
+          <Link
+            to={user ? dashHref : "/login"}
+            onClick={() => setMobileOpen(false)}
+            className="text-slate-300 hover:text-white text-sm font-medium"
+          >
+            {user ? "Dashboard" : "Sign In"}
           </Link>
           <ContactDialog
             trigger={

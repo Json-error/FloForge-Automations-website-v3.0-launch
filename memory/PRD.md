@@ -30,6 +30,13 @@ Hero-only landing page; CSS/Framer 3D visual; working contact form storing leads
 ## Next Tasks
 Build out the remaining sections (Services → Contact) when the user is ready.
 
+## Platform Build (2026-08 — auth + dashboards)
+- **Auth** (`platform_api.py`): unified httpOnly `session_token` cookie sessions. Email/password (bcrypt) + Emergent Google OAuth (`/api/auth/session`). Roles: client/admin. Admin seeded from env (datatype.json@gmail.com) idempotently. Login brute-force lockout (5 fails → 15-min lock via `login_attempts`).
+- **Client dashboard** (`/dashboard`): order summary + deliverables checklist, training booking (Mon–Fri 9–4 America/Phoenix, 30-min slots + 30-min buffer, server-validated), client↔admin messaging, Growth Partnership updates log + next quarterly review.
+- **Admin dashboard** (`/admin`, admin-only): client list w/ editable deliverables (cycle pending→in_progress→complete), internal notes + quarterly review date, per-client messaging + growth updates; revenue overview (total/by-tier/recent from paid `payment_transactions`, Stripe-synced); leads pipeline (status enum new/contacted/converted); bookings calendar. Email notifications on new booking + message.
+- Frontend: `AuthContext`, `ProtectedRoute`, `AuthCallback`, `Login`, `ClientDashboard`, `AdminDashboard`; navbar shows Sign In/Dashboard.
+- Verified iteration_3: frontend 100%; backend fixes (booking validation, naive-datetime 400s, login lockout, lead-status enum) all re-verified via curl. Known: external-URL CORS shows `*` at platform ingress (backend config is correct + same-origin, so safe). Date inputs use native picker (v1).
+
 ## Full Site Status (2026-06-29)
 Complete multi-section landing page + Privacy Policy route. All sections share one glassmorphism design system (dark theme with a light Off-White Results section for rhythm):
 - **Hero, Services, How It Works, Industries, Automation Engine, Why FloForge, Results, Contact, Footer** — all wired in `pages/Landing.jsx`.
