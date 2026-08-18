@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { motion } from "framer-motion";
-import { CheckCircle2, Loader2, XCircle, ArrowRight } from "lucide-react";
+import { SealCheck, CircleNotch, XCircle } from "@phosphor-icons/react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const MAX_POLLS = 8;
@@ -11,7 +10,7 @@ export default function PaymentSuccess() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = params.get("session_id");
-  const [state, setState] = useState("checking"); // checking | paid | timeout | error
+  const [state, setState] = useState("checking");
 
   const poll = useCallback(async (attempt) => {
     if (!sessionId) { setState("error"); return; }
@@ -29,57 +28,56 @@ export default function PaymentSuccess() {
   useEffect(() => { poll(0); }, [poll]);
 
   return (
-    <main className="relative min-h-screen bg-[#0F172A] text-[#F8FAFC] antialiased flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 h-72 w-96 rounded-full bg-[#5B21B6]/25 blur-[120px] animate-glow-pulse" />
-
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-        data-testid="payment-success-card"
-        className="relative mx-6 max-w-md w-full rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-2xl p-10 text-center shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+    <main className="min-h-screen bg-[#F1F5F9] text-[#0F172A] flex items-center justify-center px-6">
+      <div data-testid="payment-success-card" className="max-w-md w-full border border-slate-300 rounded-sm bg-[#F8FAFC] p-10 text-center">
         {state === "checking" && (
           <div data-testid="payment-checking">
-            <Loader2 size={44} className="mx-auto animate-spin text-[#a78bfa]" />
-            <h1 className="mt-6 font-manrope font-bold text-2xl text-white">Confirming your payment…</h1>
-            <p className="mt-3 text-sm text-slate-400">This only takes a moment. Please don't close this window.</p>
+            <CircleNotch size={40} className="mx-auto animate-spin text-[#10B981]" />
+            <h1 className="mt-6 font-manrope font-bold text-2xl">Confirming your payment</h1>
+            <p className="mt-3 text-sm text-slate-600">This only takes a moment. Please keep this window open.</p>
           </div>
         )}
         {state === "paid" && (
           <div data-testid="payment-paid">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#10B981]/15 border border-[#10B981]/40">
-              <CheckCircle2 size={34} className="text-[#10B981]" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-sm border border-[#10B981] bg-[#10B981]/10">
+              <SealCheck size={30} className="text-[#0e9f6f]" />
             </div>
-            <h1 className="mt-6 font-manrope font-extrabold text-3xl text-white tracking-tight">Payment Confirmed</h1>
-            <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-              Thank you for choosing FloForge Automations. A specialist will reach out within
-              one business day to kick off your system setup.
+            <h1 className="mt-6 font-manrope font-extrabold text-3xl tracking-tight">Payment confirmed</h1>
+            <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+              Thank you for choosing FloForge Automations. A specialist will reach out within one business day to kick off your setup.
             </p>
-            <Link to="/" data-testid="success-home-btn" className="mt-8 inline-flex items-center justify-center gap-2 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-manrope font-semibold px-8 py-3.5 rounded-lg shadow-[0_4px_24px_rgba(91,33,182,0.45)] hover:-translate-y-0.5 transition-all">
-              Back to Home <ArrowRight size={16} />
-            </Link>
+            <div className="mt-8 flex justify-center gap-3">
+              <Link to="/login" data-testid="success-dashboard-btn" className="bg-[#10B981] hover:bg-[#0e9f6f] text-white font-manrope font-semibold px-6 py-3 rounded-sm transition-colors duration-150">
+                Go to your dashboard
+              </Link>
+              <Link to="/" data-testid="success-home-btn" className="border border-slate-300 hover:border-slate-900 font-manrope font-semibold px-6 py-3 rounded-sm transition-colors duration-150">
+                Home
+              </Link>
+            </div>
           </div>
         )}
         {(state === "timeout" || state === "error") && (
           <div data-testid="payment-error">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-500/15 border border-red-500/40">
-              <XCircle size={34} className="text-red-400" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-sm border border-red-400 bg-red-100">
+              <XCircle size={30} className="text-red-600" />
             </div>
-            <h1 className="mt-6 font-manrope font-bold text-2xl text-white">
+            <h1 className="mt-6 font-manrope font-bold text-2xl">
               {state === "timeout" ? "Still processing" : "Something went wrong"}
             </h1>
-            <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+            <p className="mt-3 text-sm text-slate-600 leading-relaxed">
               {state === "timeout"
                 ? "Your payment is taking longer than usual to confirm. If you completed checkout, it will update shortly."
-                : "We couldn't confirm this payment. If you were charged, please contact us and we'll sort it out right away."}
+                : "We couldn't confirm this payment. If you were charged, contact us and we'll sort it out right away."}
             </p>
             <div className="mt-8 flex justify-center gap-3">
-              <button onClick={() => navigate("/pricing")} data-testid="error-retry-btn" className="border border-white/20 hover:border-white/50 text-white font-manrope font-semibold px-6 py-3 rounded-lg transition-all">
+              <button onClick={() => navigate("/pricing")} data-testid="error-retry-btn" className="border border-slate-300 hover:border-slate-900 font-manrope font-semibold px-6 py-3 rounded-sm transition-colors duration-150">
                 Back to Pricing
               </button>
-              <Link to="/" className="bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-manrope font-semibold px-6 py-3 rounded-lg transition-all">Home</Link>
+              <Link to="/" className="bg-[#0F172A] hover:bg-slate-800 text-white font-manrope font-semibold px-6 py-3 rounded-sm transition-colors duration-150">Home</Link>
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
     </main>
   );
 }

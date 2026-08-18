@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="7" time="1.517" timestamp="2026-08-18T21:54:13.572637+00:00" hostname="agent-env-72e9e998-58e0-4159-a8fc-156f1059af47"><testcase classname="tests.test_payments.TestPaymentStatus" name="test_status_for_created_session" time="0.152"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:1116: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_payments.py:76: in test_status_for_created_session
+    sid = r.json()["session_id"]
+          ^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:1120: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_payments.TestPaymentsCheckout" name="test_checkout_starter_onetime" time="0.162"><failure message="AssertionError: unexpected: 500 Internal Server Error&#10;assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">backend/tests/test_payments.py:27: in test_checkout_starter_onetime
+    assert r.status_code == 200, f"unexpected: {r.status_code} {r.text}"
+E   AssertionError: unexpected: 500 Internal Server Error
+E   assert 500 == 200
+E    +  where 500 = &lt;Response [500]&gt;.status_code</failure></testcase><testcase classname="tests.test_payments.TestPaymentsCheckout" name="test_checkout_business_onetime" time="0.040"><failure message="AssertionError: unexpected: 500 Internal Server Error&#10;assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">backend/tests/test_payments.py:39: in test_checkout_business_onetime
+    assert r.status_code == 200, f"unexpected: {r.status_code} {r.text}"
+E   AssertionError: unexpected: 500 Internal Server Error
+E   assert 500 == 200
+E    +  where 500 = &lt;Response [500]&gt;.status_code</failure></testcase><testcase classname="tests.test_payments.TestPaymentsCheckout" name="test_checkout_growth_subscription" time="0.042"><failure message="AssertionError: unexpected: 500 Internal Server Error&#10;assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">backend/tests/test_payments.py:49: in test_checkout_growth_subscription
+    assert r.status_code == 200, f"unexpected: {r.status_code} {r.text}"
+E   AssertionError: unexpected: 500 Internal Server Error
+E   assert 500 == 200
+E    +  where 500 = &lt;Response [500]&gt;.status_code</failure></testcase><testcase classname="tests.test_payments.TestPaymentStatus" name="test_status_for_unknown_session" time="0.041" /><testcase classname="tests.test_payments.TestPaymentsCheckout" name="test_checkout_invalid_lookup_key" time="0.047" /><testcase classname="tests.test_payments.TestPaymentsCheckout" name="test_checkout_missing_fields" time="0.033" /></testsuite></testsuites>

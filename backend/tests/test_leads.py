@@ -3,9 +3,16 @@ import os
 import uuid
 import pytest
 import requests
+from dotenv import dotenv_values
+from pymongo import MongoClient
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://lead-automation-hub-19.preview.emergentagent.com").rstrip("/")
+frontend_env = dotenv_values("/app/frontend/.env")
+backend_env = dotenv_values("/app/backend/.env")
+BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or frontend_env.get("REACT_APP_BACKEND_URL") or "").rstrip("/")
+if not BASE_URL:
+    raise RuntimeError("REACT_APP_BACKEND_URL is missing")
 API = f"{BASE_URL}/api"
+db = MongoClient(backend_env["MONGO_URL"])[backend_env["DB_NAME"]]
 
 
 @pytest.fixture
@@ -24,7 +31,14 @@ def test_root_health(api_client):
 
 # Lead create + persistence verification
 class TestLeads:
-    def test_create_lead_and_verify_persistence(self, api_client):
+    @pytest.fixture(scope="class")
+    def created_lead_ids(self):
+        ids = []
+        yield ids
+        if ids:
+            db.leads.delete_many({"id": {"$in": ids}})
+
+    def test_create_lead_and_verify_persistence(self, api_client, created_lead_ids):
         unique = uuid.uuid4().hex[:8]
         payload = {
             "full_name": f"TEST_User_{unique}",
@@ -45,6 +59,7 @@ class TestLeads:
         assert "_id" not in data, "Mongo _id should not be exposed"
 
         lead_id = data["id"]
+        created_lead_ids.append(lead_id)
 
         # GET to verify persisted
         r2 = api_client.get(f"{API}/leads")
@@ -78,16 +93,18 @@ class TestLeads:
         r = api_client.post(f"{API}/leads", json=payload)
         assert r.status_code == 422
 
-    def test_leads_sorted_desc(self, api_client):
+    def test_leads_sorted_desc(self, api_client, created_lead_ids):
         # Create two leads, ensure newest first
         for i in range(2):
             unique = uuid.uuid4().hex[:8]
-            api_client.post(f"{API}/leads", json={
+            created = api_client.post(f"{API}/leads", json={
                 "full_name": f"TEST_Sort_{i}_{unique}",
                 "company_name": f"TEST_SortCo_{unique}",
                 "email": f"sort_{unique}@example.com",
                 "bottleneck": "Operations",
             })
+            assert created.status_code == 200, created.text
+            created_lead_ids.append(created.json()["id"])
         r = api_client.get(f"{API}/leads")
         assert r.status_code == 200
         leads = r.json()

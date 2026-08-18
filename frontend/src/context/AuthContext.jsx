@@ -16,14 +16,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  useEffect(() => {
-    // Skip /me if returning from Google OAuth; AuthCallback handles it.
-    if (window.location.hash?.includes("session_id=")) {
-      setUser(null);
-      return;
-    }
-    checkAuth();
-  }, [checkAuth]);
+  useEffect(() => { checkAuth(); }, [checkAuth]);
 
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", { email, password });
@@ -39,14 +32,12 @@ export function AuthProvider({ children }) {
     try { await api.post("/auth/logout"); } catch {}
     setUser(false);
   };
-  const googleLogin = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    const redirectUrl = window.location.origin + "/dashboard";
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  const hubspotLogin = () => {
+    window.location.href = `${process.env.REACT_APP_BACKEND_URL}/api/hubspot/oauth/start?mode=login`;
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, checkAuth, login, register, logout, googleLogin }}>
+    <AuthContext.Provider value={{ user, setUser, checkAuth, login, register, logout, hubspotLogin }}>
       {children}
     </AuthContext.Provider>
   );

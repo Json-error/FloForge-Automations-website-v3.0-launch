@@ -2,8 +2,12 @@
 import os
 import pytest
 import requests
+from dotenv import dotenv_values
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL").rstrip("/")
+frontend_env = dotenv_values("/app/frontend/.env")
+BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or frontend_env.get("REACT_APP_BACKEND_URL") or "").rstrip("/")
+if not BASE_URL:
+    raise RuntimeError("REACT_APP_BACKEND_URL is missing")
 API = f"{BASE_URL}/api"
 
 
@@ -69,6 +73,7 @@ class TestPaymentStatus:
                 "lookup_key": "starter_setup_onetime",
                 "origin_url": "https://example.com",
             })
+            assert r.status_code == 200, f"Checkout setup failed: {r.status_code} {r.text}"
             sid = r.json()["session_id"]
         r = api_client.get(f"{API}/payments/status/{sid}")
         assert r.status_code == 200

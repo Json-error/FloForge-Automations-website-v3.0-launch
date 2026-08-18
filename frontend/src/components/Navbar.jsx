@@ -1,161 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { List, X } from "@phosphor-icons/react";
+import BrandLogo from "@/components/Logo";
 import ContactDialog from "@/components/ContactDialog";
-import { BrandLogo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
 
 const LINKS = [
-  { name: "Services", id: "services" },
-  { name: "How It Works", id: "how-it-works" },
-  { name: "Industries", id: "industries" },
-  { name: "Results", id: "results" },
-  { name: "Contact", id: "contact" },
+  { href: "#services", label: "Services" },
+  { href: "#how-it-works", label: "How It Works" },
+  { href: "#industries", label: "Industries" },
+  { href: "#results", label: "Results" },
+  { href: "#contact", label: "Contact" },
 ];
 
-export const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [active, setActive] = useState("");
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { user } = useAuth();
-  const dashHref = user && user.role === "admin" ? "/admin" : "/dashboard";
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const ids = ["services", "how-it-works", "industries", "results", "contact"];
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); });
-      },
-      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
-    );
-    ids.forEach((id) => { const el = document.getElementById(id); if (el) obs.observe(el); });
-    return () => obs.disconnect();
-  }, []);
 
   return (
-    <motion.nav
-      initial={{ y: -40, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      data-testid="main-navbar"
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled
-          ? "backdrop-blur-xl bg-[#0F172A]/80 border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
-          : "bg-transparent border-b border-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto flex justify-between items-center h-20 px-6 lg:px-8">
-        <a
-          href="#top"
-          data-testid="navbar-logo"
-          className="flex items-center gap-2.5 group"
-        >
-          <BrandLogo size={34} />
-        </a>
-
-        <div className="hidden md:flex items-center space-x-8">
+    <header className="sticky top-0 z-50 bg-[#F8FAFC] border-b border-slate-200" data-testid="navbar">
+      <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6 lg:px-8">
+        <Link to="/" data-testid="nav-logo"><BrandLogo /></Link>
+        <nav className="hidden lg:flex items-center gap-7">
           {LINKS.map((l) => (
-            <a
-              key={l.id}
-              href={`#${l.id}`}
-              data-testid={`navbar-link-${l.id}`}
-              className={`text-sm font-medium transition-colors duration-200 relative after:absolute after:left-0 after:-bottom-1 after:h-px after:bg-[#5B21B6] after:transition-all after:duration-300 ${
-                active === l.id
-                  ? "text-white after:w-full"
-                  : "text-slate-300 hover:text-white after:w-0 hover:after:w-full"
-              }`}
-            >
-              {l.name}
-            </a>
+            <a key={l.href} href={l.href} data-testid={`nav-${l.href.slice(1)}`}
+              className="text-sm text-slate-600 hover:text-slate-900 transition-colors duration-150">{l.label}</a>
           ))}
-          <Link
-            to="/pricing"
-            data-testid="navbar-link-pricing"
-            className="text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200"
-          >
-            Pricing
-          </Link>
-        </div>
-
-        <div className="hidden md:flex items-center gap-3">
-          <Link
-            to={user ? dashHref : "/login"}
-            data-testid="navbar-auth-link"
-            className="text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200"
-          >
+          <Link to="/pricing" data-testid="nav-pricing" className="text-sm text-slate-600 hover:text-slate-900 transition-colors duration-150">Pricing</Link>
+        </nav>
+        <div className="hidden lg:flex items-center gap-3">
+          <Link to={user ? (user.role === "admin" ? "/admin" : "/dashboard") : "/login"} data-testid="nav-signin"
+            className="text-sm font-medium text-slate-700 hover:text-slate-900 border border-slate-300 hover:border-slate-900 rounded px-4 py-2 transition-colors duration-150">
             {user ? "Dashboard" : "Sign In"}
           </Link>
-          <ContactDialog
-            trigger={
-              <button
-                data-testid="navbar-cta"
-                className="bg-[#5B21B6] hover:bg-[#4C1D95] text-white text-sm font-semibold font-manrope px-5 py-2.5 rounded-md transition-all duration-300 shadow-[0_0_15px_rgba(91,33,182,0.4)] hover:shadow-[0_0_25px_rgba(91,33,182,0.7)] hover:-translate-y-0.5"
-              >
-                Start Now
-              </button>
-            }
-          />
+          <button onClick={() => setDialogOpen(true)} data-testid="nav-cta"
+            className="text-sm font-manrope font-semibold bg-[#10B981] hover:bg-[#0e9f6f] text-white rounded px-4 py-2 transition-colors duration-150">
+            Start Now
+          </button>
         </div>
-
-        <button
-          className="md:hidden text-white p-2"
-          data-testid="mobile-menu-toggle"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        <button onClick={() => setOpen(!open)} data-testid="nav-mobile-toggle" className="lg:hidden text-slate-800">
+          {open ? <X size={22} /> : <List size={22} />}
         </button>
       </div>
-
-      {mobileOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="md:hidden bg-[#0F172A]/95 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex flex-col gap-4"
-          data-testid="mobile-menu"
-        >
+      {open && (
+        <div className="lg:hidden border-t border-slate-200 bg-[#F8FAFC] px-6 py-4 space-y-3" data-testid="nav-mobile-menu">
           {LINKS.map((l) => (
-            <a
-              key={l.id}
-              href={`#${l.id}`}
-              onClick={() => setMobileOpen(false)}
-              className="text-slate-300 hover:text-white text-sm font-medium"
-            >
-              {l.name}
-            </a>
+            <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="block text-sm text-slate-700">{l.label}</a>
           ))}
-          <Link
-            to="/pricing"
-            onClick={() => setMobileOpen(false)}
-            className="text-slate-300 hover:text-white text-sm font-medium"
-          >
-            Pricing
-          </Link>
-          <Link
-            to={user ? dashHref : "/login"}
-            onClick={() => setMobileOpen(false)}
-            className="text-slate-300 hover:text-white text-sm font-medium"
-          >
+          <Link to="/pricing" className="block text-sm text-slate-700">Pricing</Link>
+          <Link to={user ? (user.role === "admin" ? "/admin" : "/dashboard") : "/login"} className="block text-sm font-medium text-slate-900">
             {user ? "Dashboard" : "Sign In"}
           </Link>
-          <ContactDialog
-            trigger={
-              <button className="bg-[#5B21B6] text-white text-sm font-semibold font-manrope px-5 py-2.5 rounded-md w-full">
-                Start Now
-              </button>
-            }
-          />
-        </motion.div>
+          <button onClick={() => { setOpen(false); setDialogOpen(true); }}
+            className="w-full text-sm font-manrope font-semibold bg-[#10B981] text-white rounded px-4 py-2.5">Start Now</button>
+        </div>
       )}
-    </motion.nav>
+      <ContactDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+    </header>
   );
-};
-
-export default Navbar;
+}

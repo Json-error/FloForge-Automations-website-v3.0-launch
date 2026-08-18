@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,29 +6,24 @@
 
 body {
     margin: 0;
-    font-family: 'Inter', sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #0F172A;
-    color: #F8FAFC;
+    background-color: #F8FAFC;
+    color: #0F172A;
 }
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: 6rem;
+    scroll-padding-top: 5rem;
 }
 
-/* Reduced motion: disable ambient/heavy animations */
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after {
         animation-duration: 0.001ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
-    }
-    .animate-float-slow, .animate-float-medium, .animate-float-fast,
-    .animate-float-hero, .animate-glow-pulse, .connector-flow {
-        animation: none !important;
     }
 }
 
@@ -38,26 +33,26 @@ code {
 
 @layer base {
     :root {
-        --background: 222 47% 11%;
-        --foreground: 210 40% 98%;
-        --card: 222 47% 11%;
-        --card-foreground: 210 40% 98%;
-        --popover: 222 47% 11%;
-        --popover-foreground: 210 40% 98%;
-        --primary: 263 70% 42%;
+        --background: 210 40% 98%;
+        --foreground: 222 47% 11%;
+        --card: 210 40% 98%;
+        --card-foreground: 222 47% 11%;
+        --popover: 210 40% 98%;
+        --popover-foreground: 222 47% 11%;
+        --primary: 160 84% 39%;
         --primary-foreground: 210 40% 98%;
-        --secondary: 244 47% 34%;
-        --secondary-foreground: 210 40% 98%;
-        --muted: 217 33% 17%;
-        --muted-foreground: 215 20% 65%;
-        --accent: 217 33% 17%;
-        --accent-foreground: 210 40% 98%;
-        --destructive: 0 84% 60%;
+        --secondary: 210 40% 94%;
+        --secondary-foreground: 222 47% 11%;
+        --muted: 210 40% 94%;
+        --muted-foreground: 215 16% 40%;
+        --accent: 210 40% 94%;
+        --accent-foreground: 222 47% 11%;
+        --destructive: 0 72% 45%;
         --destructive-foreground: 210 40% 98%;
-        --border: 217 33% 20%;
-        --input: 217 33% 20%;
-        --ring: 263 70% 42%;
-        --radius: 0.5rem;
+        --border: 214 32% 88%;
+        --input: 214 32% 88%;
+        --ring: 160 84% 39%;
+        --radius: 0.25rem;
     }
 }
 
@@ -72,72 +67,11 @@ code {
 
 @layer utilities {
     .font-manrope { font-family: 'Manrope', sans-serif; }
-    .font-inter { font-family: 'Inter', sans-serif; }
-
-    .perspective-1200 { perspective: 1200px; }
-    .preserve-3d { transform-style: preserve-3d; }
-    .backface-hidden { backface-visibility: hidden; }
-
-    .selection-purple ::selection {
-        background: rgba(91, 33, 182, 0.5);
-        color: #fff;
-    }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+    .tabular { font-variant-numeric: tabular-nums; }
 }
 
 ::selection {
-    background: rgba(91, 33, 182, 0.5);
-    color: #fff;
-}
-
-/* Floating animations for dashboard cards */
-@keyframes float-slow {
-    0%, 100% { transform: translateY(0) translateZ(40px); }
-    50% { transform: translateY(-14px) translateZ(40px); }
-}
-@keyframes float-medium {
-    0%, 100% { transform: translateY(0) translateZ(60px); }
-    50% { transform: translateY(-18px) translateZ(60px); }
-}
-@keyframes float-fast {
-    0%, 100% { transform: translateY(0) translateZ(30px); }
-    50% { transform: translateY(-10px) translateZ(30px); }
-}
-@keyframes float-hero {
-    0%, 100% { transform: translateY(0) translateZ(80px); }
-    50% { transform: translateY(-22px) translateZ(80px); }
-}
-
-.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
-.animate-float-medium { animation: float-medium 5s ease-in-out infinite; }
-.animate-float-fast { animation: float-fast 4.5s ease-in-out infinite; }
-.animate-float-hero { animation: float-hero 5.5s ease-in-out infinite; }
-
-/* Connector line pulse */
-@keyframes dash-flow {
-    to { stroke-dashoffset: -40; }
-}
-.connector-flow {
-    stroke-dasharray: 6 10;
-    animation: dash-flow 1.6s linear infinite;
-}
-
-/* Particle drift */
-@keyframes particle-drift {
-    0% { transform: translateY(0) scale(1); opacity: 0; }
-    20% { opacity: 0.8; }
-    80% { opacity: 0.6; }
-    100% { transform: translateY(-120px) scale(0.4); opacity: 0; }
-}
-
-/* Ambient glow pulse */
-@keyframes glow-pulse {
-    0%, 100% { opacity: 0.35; }
-    50% { opacity: 0.6; }
-}
-.animate-glow-pulse { animation: glow-pulse 5s ease-in-out infinite; }
-
-/* Rotating engine rings (preserves centering) */
-@keyframes ring-spin {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to { transform: translate(-50%, -50%) rotate(360deg); }
+    background: rgba(16, 185, 129, 0.25);
+    color: #0F172A;
 }

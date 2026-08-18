@@ -31,8 +31,10 @@ ADMIN_EMAIL = ADMIN_EMAIL_MATCH.group(1)
 ADMIN_PASSWORD = ADMIN_PASSWORD_MATCH.group(1)
 
 
-def _future_weekday(days=10):
 AZ_TZ = ZoneInfo("America/Phoenix")
+
+
+def _future_weekday(days=10):
     d = datetime.now(AZ_TZ).date() + timedelta(days=days)
     while d.weekday() > 4:
         d += timedelta(days=1)
@@ -545,3 +547,94 @@ class TestResourcesTimelineAndClientAdminTools:
         client = next(item for item in listed.json() if item["user_id"] == uid)
         assert client["notes"] == notes
         assert client["next_quarterly_review"] == review
+
+
+
+@pytest.fixture(scope="module")
+def seeded_client_session():
+    """Authenticated session for the seeded client account from the credentials file."""
+    client_section = credentials_text.split("## Test client", 1)[1]
+    email_match = re.search(r"(?im)^- Email:\s*(\S+)", client_section)
+    password_match = re.search(r"(?im)^- Password:\s*(\S+)", client_section)
+    if not email_match or not password_match:
+        pytest.skip("Seeded client credentials are missing")
+    session = requests.Session()
+    session.headers.update({"Content-Type": "application/json"})
+    response = session.post(f"{API}/auth/login", json={
+        "email": email_match.group(1), "password": password_match.group(1)
+    })
+    assert response.status_code == 200, response.text
+    token = session.cookies.get("session_token")
+    yield session
+    if token:
+        db.user_sessions.delete_one({"session_token": token})
+    session.close()
+
+
+class TestOverhaulPublicAndBillingAPIs:
+    """Provider deprecation, direct lead persistence, and client billing response coverage."""
+
+    def test_auth_providers_and_removed_session_endpoint(self):
+        providers = requests.get(f"{API}/auth/providers")
+        assert providers.status_code == 200, providers.text
+        assert providers.json() == {"hubspot": False, "google": False, "microsoft": False, "apple": False}
+        for method in (requests.get, requests.post):
+            removed = method(f"{API}/auth/session")
+            assert removed.status_code in (404, 405), removed.text
+
+    def test_client_billing_has_seeded_paid_payment(self, seeded_client_session):
+        response = seeded_client_session.get(f"{API}/client/billing")
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert set(data) == {"subscriptions", "invoices", "payments"}
+        assert all(isinstance(data[key], list) for key in data)
+        payments = [item for item in data["payments"] if item["tier_name"] == "Business Automation"]
+        assert payments, f"Expected seeded Business Automation payment, got {data['payments']}"
+        payment = payments[0]
+        assert payment["amount"] > 0
+        assert payment["currency"] == "usd"
+        assert payment["recurring"] is False
+        assert isinstance(payment["session_id"], str) and payment["session_id"]
+
+    def test_lead_creation_persists_despite_email_or_hubspot_outcome(self):
+        marker = uuid.uuid4().hex[:10]
+        email = f"test_lead_overhaul_{marker}@example.com"
+        payload = {"full_name": f"TEST Lead {marker}", "company_name": "TEST FloForge QA",
+                   "email": email, "bottleneck": "Operations"}
+        response = requests.post(f"{API}/leads", json=payload)
+        assert response.status_code == 200, response.text
+        lead = response.json()
+        assert lead["full_name"] == payload["full_name"]
+        assert lead["email"] == email
+        try:
+            stored = db.leads.find_one({"id": lead["id"]})
+            assert stored is not None
+            assert stored["email"] == email
+            assert isinstance(stored.get("email_sent"), bool)
+            assert isinstance(stored.get("hubspot_synced"), bool)
+        finally:
+            db.leads.delete_one({"id": lead["id"]})
+
+
+class TestHubSpotUnconfiguredState:
+    """HubSpot endpoints degrade safely while OAuth credentials are intentionally absent."""
+
+    def test_public_config_and_oauth_start(self):
+        config = requests.get(f"{API}/hubspot/config")
+        assert config.status_code == 200 and config.json() == {"configured": False}
+        start = requests.get(f"{API}/hubspot/oauth/start", allow_redirects=False)
+        assert start.status_code == 503, start.text
+        assert "not configured" in start.json()["detail"].lower()
+
+    def test_authenticated_status_and_disconnected_resources(self, seeded_client_session):
+        status = seeded_client_session.get(f"{API}/hubspot/status")
+        assert status.status_code == 200, status.text
+        data = status.json()
+        assert data["configured"] is False
+        assert data["connected"] is False
+        contacts = seeded_client_session.get(f"{API}/hubspot/contacts")
+        assert contacts.status_code == 404, contacts.text
+        assert contacts.json()["detail"] == "Connect your HubSpot account first"
+        deals = seeded_client_session.get(f"{API}/hubspot/deals")
+        assert deals.status_code == 404, deals.text
+        assert deals.json()["detail"] == "Connect your HubSpot account first"

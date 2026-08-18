@@ -23,9 +23,7 @@ db = _client[os.environ["DB_NAME"]]
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "").lower()
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
-EMAIL_BASE_URL = "https://integrations.emergentagent.com"
-EMERGENT_EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY", "")
-EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "FloForge Automations")
+from emailer import notify_email as send_email
 NOTIFY_EMAIL = os.environ.get("LEAD_NOTIFY_EMAIL", "")
 AZ_TZ = ZoneInfo("America/Phoenix")
 SESSION_DAYS = 7
@@ -97,18 +95,6 @@ async def require_admin(user=Depends(get_current_user)):
     return user
 
 
-async def send_email(to, subject, html):
-    if not EMERGENT_EMAIL_KEY or not to:
-        return
-    try:
-        async with httpx.AsyncClient(timeout=20) as c:
-            await c.post(f"{EMAIL_BASE_URL}/api/v1/email/send",
-                         headers={"X-Email-Key": EMERGENT_EMAIL_KEY},
-                         json={"to": [to], "subject": subject, "html": html, "from_name": EMAIL_FROM_NAME})
-    except Exception:
-        pass
-
-
 router = APIRouter(prefix="/api")
 
 
@@ -117,8 +103,6 @@ class RegisterReq(BaseModel):
     email: EmailStr; password: str = Field(min_length=6); name: str = Field(min_length=1)
 class LoginReq(BaseModel):
     email: EmailStr; password: str
-class SessionReq(BaseModel):
-    session_id: str
 class BookingReq(BaseModel):
     slot_start: str
 class MessageReq(BaseModel):
@@ -183,31 +167,15 @@ async def login(body: LoginReq, response: Response):
     return _clean(user)
 
 
-@router.post("/auth/session")
-async def google_session(body: SessionReq, response: Response):
-    async with httpx.AsyncClient(timeout=20) as c:
-        r = await c.get("https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                        headers={"X-Session-ID": body.session_id})
-    if r.status_code != 200:
-        raise HTTPException(401, "Invalid session")
-    data = r.json()
-    email = data["email"].lower()
-    user = await db.users.find_one({"email": email})
-    if not user:
-        uid = f"user_{uuid.uuid4().hex[:12]}"
-        role = "admin" if email == ADMIN_EMAIL else "client"
-        await db.users.insert_one({"user_id": uid, "email": email, "name": data.get("name", email),
-                                   "picture": data.get("picture"), "role": role, "auth_provider": "google",
-                                   "notes": "", "next_quarterly_review": None,
-                                   "created_at": datetime.now(timezone.utc).isoformat()})
-        user = await db.users.find_one({"user_id": uid})
-    await _make_session(response, user["user_id"])
-    return _clean(user)
-
-
 @router.get("/auth/me")
 async def me(user=Depends(get_current_user)):
     return user
+
+
+@router.get("/auth/providers")
+async def auth_providers():
+    return {"hubspot": bool(os.environ.get("HUBSPOT_CLIENT_ID") and os.environ.get("HUBSPOT_CLIENT_SECRET")),
+            "google": False, "microsoft": False, "apple": False}
 
 
 @router.post("/auth/logout")
@@ -372,6 +340,61 @@ async def client_timeline(user=Depends(get_current_user)):
 async def client_resources(user=Depends(get_current_user)):
     return await db.resources.find({"$or": [{"user_id": user["user_id"]}, {"user_id": None}]},
                                    {"_id": 0}).sort("created_at", -1).to_list(100)
+
+
+def _sub_period_end(s):
+    if s.get("current_period_end"):
+        return s["current_period_end"]
+    items = (s.get("items") or {}).get("data") or []
+    return items[0].get("current_period_end") if items else None
+
+
+@router.get("/client/billing")
+async def client_billing(user=Depends(get_current_user)):
+    import asyncio
+    out = {"subscriptions": [], "invoices": []}
+    txns = await db.payment_transactions.find(
+        {"customer_email": user["email"], "payment_status": "paid"}, {"_id": 0}).to_list(100)
+    out["payments"] = [{"session_id": t["session_id"],
+                        "tier_name": t.get("tier_name") or TIER_META.get(t.get("lookup_key"), {}).get("name", "Package"),
+                        "amount": t.get("amount", 0), "currency": t.get("currency", "usd"),
+                        "date": t.get("updated_at") or t.get("created_at"),
+                        "recurring": TIER_META.get(t.get("lookup_key"), {}).get("recurring", False)} for t in txns]
+    if not stripe.api_key:
+        return out
+
+    def _fetch():
+        subs, invs = [], []
+        for cust in stripe.Customer.list(email=user["email"], limit=5).data:
+            for s in stripe.Subscription.list(customer=cust.id, status="all", limit=20).data:
+                items = (s.get("items") or {}).get("data") or []
+                price = items[0].get("price") if items else {}
+                subs.append({"id": s["id"], "status": s["status"],
+                             "plan_name": (price.get("nickname") or
+                                           TIER_META.get(price.get("lookup_key"), {}).get("name") or "Subscription"),
+                             "amount": price.get("unit_amount", 0),
+                             "currency": price.get("currency", "usd"),
+                             "interval": ((price.get("recurring") or {}).get("interval") or "month"),
+                             "current_period_end": _sub_period_end(s),
+                             "cancel_at_period_end": s.get("cancel_at_period_end", False),
+                             "started": s.get("created")})
+            for inv in stripe.Invoice.list(customer=cust.id, limit=24).data:
+                invs.append({"id": inv["id"], "number": inv.get("number"),
+                             "status": inv.get("status"),
+                             "amount_due": inv.get("amount_due", 0),
+                             "amount_paid": inv.get("amount_paid", 0),
+                             "currency": inv.get("currency", "usd"),
+                             "date": inv.get("created"),
+                             "hosted_invoice_url": inv.get("hosted_invoice_url"),
+                             "invoice_pdf": inv.get("invoice_pdf"),
+                             "description": (inv.get("lines", {}).get("data") or [{}])[0].get("description")})
+        return subs, invs
+
+    try:
+        out["subscriptions"], out["invoices"] = await asyncio.to_thread(_fetch)
+    except Exception:
+        pass
+    return out
 
 
 # ---------- admin ----------

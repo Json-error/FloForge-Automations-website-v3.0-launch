@@ -1,31 +1,26 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { XCircle, ArrowRight } from "lucide-react";
+import { Prohibit } from "@phosphor-icons/react";
 
 export default function PaymentCancel() {
   return (
-    <main className="relative min-h-screen bg-[#0F172A] text-[#F8FAFC] antialiased flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 h-72 w-96 rounded-full bg-[#5B21B6]/15 blur-[120px]" />
-
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-        data-testid="payment-cancel-card"
-        className="relative mx-6 max-w-md w-full rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-2xl p-10 text-center shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/5 border border-white/15">
-          <XCircle size={34} className="text-slate-400" />
+    <main className="min-h-screen bg-[#F1F5F9] text-[#0F172A] flex items-center justify-center px-6">
+      <div data-testid="payment-cancel-card" className="max-w-md w-full border border-slate-300 rounded-sm bg-[#F8FAFC] p-10 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-sm border border-slate-400 bg-slate-100">
+          <Prohibit size={30} className="text-slate-600" />
         </div>
-        <h1 className="mt-6 font-manrope font-bold text-2xl text-white tracking-tight">Checkout Cancelled</h1>
-        <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-          No charge was made. Whenever you're ready, you can pick a plan and continue—we're
-          here to help you build a smarter system.
+        <h1 className="mt-6 font-manrope font-bold text-2xl">Checkout canceled</h1>
+        <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+          No charge was made. You can pick a plan whenever you're ready.
         </p>
         <div className="mt-8 flex justify-center gap-3">
-          <Link to="/pricing" data-testid="cancel-pricing-btn" className="inline-flex items-center gap-2 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-manrope font-semibold px-7 py-3.5 rounded-lg shadow-[0_4px_24px_rgba(91,33,182,0.45)] hover:-translate-y-0.5 transition-all">
-            View Plans <ArrowRight size={16} />
+          <Link to="/pricing" data-testid="cancel-pricing-btn" className="bg-[#10B981] hover:bg-[#0e9f6f] text-white font-manrope font-semibold px-6 py-3 rounded-sm transition-colors duration-150">
+            Back to Pricing
           </Link>
-          <Link to="/" className="border border-white/20 hover:border-white/50 text-white font-manrope font-semibold px-7 py-3.5 rounded-lg transition-all">Home</Link>
+          <Link to="/" data-testid="cancel-home-btn" className="border border-slate-300 hover:border-slate-900 font-manrope font-semibold px-6 py-3 rounded-sm transition-colors duration-150">
+            Home
+          </Link>
         </div>
-      </motion.div>
+      </div>
     </main>
   );
 }
