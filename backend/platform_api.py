@@ -126,13 +126,15 @@ class MessageReq(BaseModel):
 class AdminMessageReq(BaseModel):
     user_id: str; body: str = Field(min_length=1)
 class DeliverableReq(BaseModel):
-    session_id: str; key: str; status: str
+    session_id: str; key: str; status: Literal["pending", "in_progress", "complete"]
 class ClientNotesReq(BaseModel):
     notes: str | None = None; next_quarterly_review: str | None = None
 class LeadStatusReq(BaseModel):
     status: Literal["new", "contacted", "converted"]
 class GrowthUpdateReq(BaseModel):
     user_id: str; body: str = Field(min_length=1)
+class ResourceReq(BaseModel):
+    user_id: str | None = None; title: str = Field(min_length=1); url: str = Field(min_length=1); description: str = ""
 
 
 # ---------- auth ----------
@@ -321,11 +323,15 @@ async def create_booking(body: BookingReq, user=Depends(get_current_user)):
 
 @router.get("/client/messages")
 async def client_messages(user=Depends(get_current_user)):
+    if user.get("role") == "admin":
+        raise HTTPException(403, "Admins use the admin inbox")
     return await db.messages.find({"user_id": user["user_id"]}, {"_id": 0}).sort("created_at", 1).to_list(500)
 
 
 @router.post("/client/messages")
 async def client_send_message(body: MessageReq, user=Depends(get_current_user)):
+    if user.get("role") == "admin":
+        raise HTTPException(403, "Admins must reply from the admin inbox")
     doc = {"message_id": f"msg_{uuid.uuid4().hex[:10]}", "user_id": user["user_id"],
            "user_name": user["name"], "sender": "client", "body": body.body,
            "created_at": datetime.now(timezone.utc).isoformat()}
@@ -334,6 +340,38 @@ async def client_send_message(body: MessageReq, user=Depends(get_current_user)):
                      f"<p><b>{user['name']}</b> ({user['email']}) sent a message:</p><p>{body.body}</p>")
     doc.pop("_id", None)
     return doc
+
+
+@router.get("/client/timeline")
+async def client_timeline(user=Depends(get_current_user)):
+    events = []
+    txns = await db.payment_transactions.find(
+        {"customer_email": user["email"], "payment_status": "paid"}, {"_id": 0}).to_list(100)
+    for t in txns:
+        name = t.get("tier_name") or TIER_META.get(t.get("lookup_key"), {}).get("name", "Package")
+        events.append({"type": "purchase", "label": f"{name} package purchased — setup started",
+                       "at": str(t.get("created_at") or t.get("updated_at") or "")})
+    for b in await db.bookings.find({"user_id": user["user_id"], "status": {"$ne": "cancelled"}}, {"_id": 0}).to_list(100):
+        try:
+            local = datetime.fromisoformat(b["slot_start"]).astimezone(AZ_TZ).strftime("%b %d at %I:%M %p")
+            events.append({"type": "booking", "label": f"Training session booked for {local} (AZ)",
+                           "at": str(b.get("created_at") or "")})
+        except Exception:
+            pass
+    for u in await db.growth_updates.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(100):
+        events.append({"type": "update", "label": u["body"], "at": str(u.get("created_at") or "")})
+    for a in await db.activity_log.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(200):
+        events.append({"type": a.get("type", "event"), "label": a["label"], "at": str(a.get("created_at") or "")})
+    for r in await db.resources.find({"$or": [{"user_id": user["user_id"]}, {"user_id": None}]}, {"_id": 0}).to_list(100):
+        events.append({"type": "resource", "label": f"New resource shared: {r['title']}", "at": str(r.get("created_at") or "")})
+    events.sort(key=lambda e: e["at"], reverse=True)
+    return events[:50]
+
+
+@router.get("/client/resources")
+async def client_resources(user=Depends(get_current_user)):
+    return await db.resources.find({"$or": [{"user_id": user["user_id"]}, {"user_id": None}]},
+                                   {"_id": 0}).sort("created_at", -1).to_list(100)
 
 
 # ---------- admin ----------
@@ -370,6 +408,14 @@ async def admin_update_deliverable(body: DeliverableReq, admin=Depends(require_a
         if d["key"] == body.key:
             d["status"] = body.status
     await db.payment_transactions.update_one({"session_id": body.session_id}, {"$set": {"deliverables": dels}})
+    if body.status in ("in_progress", "complete"):
+        u = await db.users.find_one({"email": (txn.get("customer_email") or "").lower()})
+        if u:
+            label = next((d["label"] for d in dels if d["key"] == body.key), body.key)
+            verb = "completed" if body.status == "complete" else "started"
+            await db.activity_log.insert_one({"event_id": f"ev_{uuid.uuid4().hex[:10]}", "user_id": u["user_id"],
+                                              "type": "deliverable", "label": f"{label} — {verb}",
+                                              "created_at": datetime.now(timezone.utc).isoformat()})
     return {"deliverables": dels}
 
 
@@ -385,8 +431,14 @@ async def admin_revenue(admin=Depends(require_admin)):
     recent_out = [{"tier_name": TIER_META.get(r.get("lookup_key"), {}).get("name", "Package"),
                    "amount": r.get("amount", 0), "email": r.get("customer_email"),
                    "date": r.get("updated_at")} for r in recent]
+    by_month = {}
+    for t in txns:
+        key = str(t.get("updated_at") or t.get("created_at") or "")[:7]
+        if key:
+            by_month[key] = by_month.get(key, 0) + t.get("amount", 0)
     return {"total": total, "count": len(txns),
             "by_tier": [{"name": k, "amount": v} for k, v in by_tier.items()],
+            "by_month": [{"month": k, "amount": by_month[k]} for k in sorted(by_month)],
             "recent": recent_out}
 
 
@@ -427,6 +479,69 @@ async def admin_add_update(body: GrowthUpdateReq, admin=Depends(require_admin)):
     await db.growth_updates.insert_one(doc)
     doc.pop("_id", None)
     return doc
+
+
+@router.get("/admin/inbox")
+async def admin_inbox(admin=Depends(require_admin)):
+    msgs = await db.messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(2000)
+    threads = {}
+    for m in msgs:
+        t = threads.setdefault(m["user_id"], {"user_id": m["user_id"], "last_message": m["body"],
+                                              "last_sender": m["sender"], "last_at": m["created_at"], "count": 0})
+        t["count"] += 1
+    if not threads:
+        return []
+    users = await db.users.find({"user_id": {"$in": list(threads)}}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    umap = {u["user_id"]: u for u in users}
+    out = [{**t, "user_name": umap.get(uid, {}).get("name", "Unknown"),
+            "user_email": umap.get(uid, {}).get("email", "")} for uid, t in threads.items()]
+    return sorted(out, key=lambda x: x["last_at"], reverse=True)
+
+
+@router.get("/admin/activity")
+async def admin_activity(admin=Depends(require_admin)):
+    events = []
+    for l in await db.leads.find({}, {"_id": 0}).sort("created_at", -1).to_list(20):
+        events.append({"type": "lead", "label": f"New lead: {l.get('full_name', '')} ({l.get('company_name', '')})",
+                       "at": str(l.get("created_at") or "")})
+    for t in await db.payment_transactions.find({"payment_status": "paid"}, {"_id": 0}).sort("updated_at", -1).to_list(20):
+        name = t.get("tier_name") or TIER_META.get(t.get("lookup_key"), {}).get("name", "Package")
+        events.append({"type": "payment", "label": f"Payment received: {name} — ${t.get('amount', 0) / 100:,.0f} ({t.get('customer_email', '')})",
+                       "at": str(t.get("updated_at") or t.get("created_at") or "")})
+    for b in await db.bookings.find({"status": {"$ne": "cancelled"}}, {"_id": 0}).sort("created_at", -1).to_list(20):
+        try:
+            local = datetime.fromisoformat(b["slot_start"]).astimezone(AZ_TZ).strftime("%b %d at %I:%M %p")
+        except Exception:
+            local = b.get("slot_start", "")
+        events.append({"type": "booking", "label": f"{b.get('user_name', '')} booked training for {local} (AZ)",
+                       "at": str(b.get("created_at") or "")})
+    for m in await db.messages.find({"sender": "client"}, {"_id": 0}).sort("created_at", -1).to_list(20):
+        events.append({"type": "message", "label": f"Message from {m.get('user_name', 'client')}: {m.get('body', '')[:90]}",
+                       "at": str(m.get("created_at") or "")})
+    events.sort(key=lambda e: e["at"], reverse=True)
+    return events[:40]
+
+
+@router.post("/admin/resources")
+async def admin_add_resource(body: ResourceReq, admin=Depends(require_admin)):
+    doc = {"resource_id": f"res_{uuid.uuid4().hex[:10]}", "user_id": body.user_id, "title": body.title,
+           "url": body.url, "description": body.description,
+           "created_at": datetime.now(timezone.utc).isoformat()}
+    await db.resources.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@router.get("/admin/resources")
+async def admin_list_resources(user_id: str | None = None, admin=Depends(require_admin)):
+    q = {"user_id": user_id} if user_id else {}
+    return await db.resources.find(q, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+
+@router.delete("/admin/resources/{resource_id}")
+async def admin_delete_resource(resource_id: str, admin=Depends(require_admin)):
+    await db.resources.delete_one({"resource_id": resource_id})
+    return {"ok": True}
 
 
 async def seed_and_index():

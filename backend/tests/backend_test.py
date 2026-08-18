@@ -1,5 +1,6 @@
 """Regression tests for FloForge platform auth, RBAC, dashboards, booking, messaging and admin APIs."""
 import os
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -17,15 +18,21 @@ BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or frontend_env.get("REACT_A
 if not BASE_URL:
     raise RuntimeError("REACT_APP_BACKEND_URL is missing")
 API = f"{BASE_URL}/api"
-ADMIN_EMAIL = "datatype.json@gmail.com"
-ADMIN_PASSWORD = "Dragons101!@#"
-AZ_TZ = ZoneInfo("America/Phoenix")
-
 mongo = MongoClient(backend_env["MONGO_URL"])
 db = mongo[backend_env["DB_NAME"]]
 
+credentials_text = Path("/app/memory/test_credentials.md").read_text(encoding="utf-8")
+admin_section = credentials_text.split("## Test client", 1)[0]
+ADMIN_EMAIL_MATCH = re.search(r"(?im)^- Email:\s*(\S+)", admin_section)
+ADMIN_PASSWORD_MATCH = re.search(r"(?im)^- Password:\s*(\S+)", admin_section)
+if not ADMIN_EMAIL_MATCH or not ADMIN_PASSWORD_MATCH:
+    raise RuntimeError("Admin credentials missing from /app/memory/test_credentials.md")
+ADMIN_EMAIL = ADMIN_EMAIL_MATCH.group(1)
+ADMIN_PASSWORD = ADMIN_PASSWORD_MATCH.group(1)
+
 
 def _future_weekday(days=10):
+AZ_TZ = ZoneInfo("America/Phoenix")
     d = datetime.now(AZ_TZ).date() + timedelta(days=days)
     while d.weekday() > 4:
         d += timedelta(days=1)
@@ -65,6 +72,8 @@ def client_context():
     db.bookings.delete_many({"user_id": uid})
     db.messages.delete_many({"user_id": uid})
     db.growth_updates.delete_many({"user_id": uid})
+    db.activity_log.delete_many({"user_id": uid})
+    db.resources.delete_many({"user_id": uid})
     db.payment_transactions.delete_many({"customer_email": email, "session_id": {"$regex": "^TEST_"}})
     db.user_sessions.delete_many({"user_id": uid})
     db.users.delete_one({"user_id": uid})
@@ -131,12 +140,16 @@ class TestAuthenticationAndRBAC:
 
     def test_login_rate_limited_after_five_failures(self):
         session = requests.Session()
+        email = f"test_lockout_{uuid.uuid4().hex[:10]}@example.com"
         statuses = []
-        for _ in range(6):
-            response = session.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": "TEST_wrong_password"})
-            statuses.append(response.status_code)
-        assert statuses[:5] == [401] * 5
-        assert statuses[5] == 429, f"Expected lockout on sixth attempt, got {statuses}"
+        try:
+            for _ in range(6):
+                response = session.post(f"{API}/auth/login", json={"email": email, "password": "TEST_wrong_password"})
+                statuses.append(response.status_code)
+            assert statuses[:5] == [401] * 5
+            assert statuses[5] == 429, f"Expected lockout on sixth attempt, got {statuses}"
+        finally:
+            db.login_attempts.delete_one({"email": email})
 
 
 class TestAdminData:
@@ -335,3 +348,200 @@ class TestMessagingAndGrowth:
         assert response.status_code == 200
         assert isinstance(response.json()["updates"], list)
         assert any(item["update_id"] == update["update_id"] and item["body"] == body for item in response.json()["updates"])
+
+
+class TestDashboardSeparationAPIs:
+    """Role separation and authentication guards for new client/admin dashboard APIs."""
+
+    @pytest.mark.parametrize("method", ["get", "post"])
+    def test_admin_cannot_use_client_messaging(self, admin_client, method):
+        if method == "get":
+            response = admin_client.get(f"{API}/client/messages")
+        else:
+            response = admin_client.post(f"{API}/client/messages", json={"body": "TEST_admin_must_not_self_message"})
+        assert response.status_code == 403, response.text
+        assert "admin" in response.json()["detail"].lower()
+
+    @pytest.mark.parametrize("endpoint", ["/admin/inbox", "/admin/activity", "/admin/resources"])
+    def test_client_cannot_access_new_admin_endpoints(self, client_context, endpoint):
+        response = client_context["session"].get(f"{API}{endpoint}")
+        assert response.status_code == 403, response.text
+        assert response.json()["detail"] == "Admin only"
+
+    @pytest.mark.parametrize("endpoint", ["/client/timeline", "/client/resources"])
+    def test_new_client_endpoints_require_authentication(self, endpoint):
+        response = requests.get(f"{API}{endpoint}")
+        assert response.status_code == 401, response.text
+        assert "detail" in response.json()
+
+
+class TestAdminInboxActivityAndRevenue:
+    """Admin inbox grouping, activity merge/sort, and revenue chart response data."""
+
+    def test_inbox_groups_thread_and_admin_reply_reaches_client(self, admin_client, client_context):
+        client_body = f"TEST_inbox_client_{uuid.uuid4().hex[:8]}"
+        admin_body = f"TEST_inbox_reply_{uuid.uuid4().hex[:8]}"
+        sent = client_context["session"].post(f"{API}/client/messages", json={"body": client_body})
+        assert sent.status_code == 200, sent.text
+
+        inbox_response = admin_client.get(f"{API}/admin/inbox")
+        assert inbox_response.status_code == 200, inbox_response.text
+        inbox = inbox_response.json()
+        assert isinstance(inbox, list)
+        assert inbox == sorted(inbox, key=lambda item: item["last_at"], reverse=True)
+        thread = next(item for item in inbox if item["user_id"] == client_context["user"]["user_id"])
+        assert set(thread) == {"user_id", "user_name", "user_email", "last_message", "last_sender", "last_at", "count"}
+        assert thread["user_name"] == client_context["user"]["name"]
+        assert thread["user_email"] == client_context["email"]
+        assert thread["last_message"] == client_body
+        assert thread["last_sender"] == "client"
+        assert isinstance(thread["count"], int) and thread["count"] >= 1
+
+        reply = admin_client.post(f"{API}/admin/messages", json={
+            "user_id": client_context["user"]["user_id"], "body": admin_body
+        })
+        assert reply.status_code == 200, reply.text
+        assert reply.json()["sender"] == "admin"
+        client_messages = client_context["session"].get(f"{API}/client/messages")
+        assert client_messages.status_code == 200
+        assert any(message["body"] == admin_body and message["sender"] == "admin" for message in client_messages.json())
+
+        refreshed = admin_client.get(f"{API}/admin/inbox").json()
+        refreshed_thread = next(item for item in refreshed if item["user_id"] == client_context["user"]["user_id"])
+        assert refreshed_thread["last_message"] == admin_body
+        assert refreshed_thread["last_sender"] == "admin"
+        assert refreshed_thread["count"] == thread["count"] + 1
+
+    def test_activity_merges_four_sources_sorted_and_capped(self, admin_client, client_context):
+        marker = uuid.uuid4().hex[:8]
+        now = datetime.now(timezone.utc)
+        lead_id = f"TEST_activity_lead_{marker}"
+        session_id = f"TEST_activity_payment_{marker}"
+        booking_id = f"TEST_activity_booking_{marker}"
+        message_id = f"TEST_activity_message_{marker}"
+        docs = {
+            "lead": {"id": lead_id, "full_name": f"TEST Lead {marker}", "company_name": "TEST Co", "created_at": (now - timedelta(minutes=4)).isoformat()},
+            "payment": {"session_id": session_id, "customer_email": client_context["email"], "lookup_key": "starter_setup_onetime", "amount": 10000, "payment_status": "paid", "created_at": (now - timedelta(minutes=3)).isoformat(), "updated_at": (now - timedelta(minutes=3)).isoformat()},
+            "booking": {"booking_id": booking_id, "user_id": client_context["user"]["user_id"], "user_name": client_context["user"]["name"], "user_email": client_context["email"], "slot_start": (now + timedelta(days=2)).isoformat(), "status": "confirmed", "created_at": (now - timedelta(minutes=2)).isoformat()},
+            "message": {"message_id": message_id, "user_id": client_context["user"]["user_id"], "user_name": client_context["user"]["name"], "sender": "client", "body": f"TEST activity message {marker}", "created_at": (now - timedelta(minutes=1)).isoformat()},
+        }
+        db.leads.insert_one(docs["lead"])
+        db.payment_transactions.insert_one(docs["payment"])
+        db.bookings.insert_one(docs["booking"])
+        db.messages.insert_one(docs["message"])
+        try:
+            response = admin_client.get(f"{API}/admin/activity")
+            assert response.status_code == 200, response.text
+            events = response.json()
+            assert isinstance(events, list) and len(events) <= 40
+            assert events == sorted(events, key=lambda event: event["at"], reverse=True)
+            assert any(event["type"] == "lead" and marker in event["label"] for event in events)
+            assert any(event["type"] == "payment" and client_context["email"] in event["label"] for event in events)
+            assert any(event["type"] == "booking" and client_context["user"]["name"] in event["label"] for event in events)
+            assert any(event["type"] == "message" and marker in event["label"] for event in events)
+        finally:
+            db.leads.delete_one({"id": lead_id})
+            db.payment_transactions.delete_one({"session_id": session_id})
+            db.bookings.delete_one({"booking_id": booking_id})
+            db.messages.delete_one({"message_id": message_id})
+
+    def test_revenue_contains_monthly_series_matching_paid_data(self, admin_client):
+        response = admin_client.get(f"{API}/admin/revenue")
+        assert response.status_code == 200, response.text
+        data = response.json()
+        expected = {}
+        for txn in db.payment_transactions.find({"payment_status": "paid"}, {"_id": 0}):
+            month = str(txn.get("updated_at") or txn.get("created_at") or "")[:7]
+            if month:
+                expected[month] = expected.get(month, 0) + txn.get("amount", 0)
+        assert data["by_month"] == [{"month": month, "amount": expected[month]} for month in sorted(expected)]
+        assert all(isinstance(item["month"], str) and isinstance(item["amount"], (int, float)) for item in data["by_month"])
+
+
+class TestResourcesTimelineAndClientAdminTools:
+    """Resource CRUD, client timeline logging, deliverable validation, notes and review persistence."""
+
+    def test_resource_create_list_client_visibility_delete(self, admin_client, client_context):
+        marker = uuid.uuid4().hex[:8]
+        payload = {
+            "user_id": client_context["user"]["user_id"],
+            "title": f"TEST Resource {marker}",
+            "url": f"https://example.com/test-{marker}",
+            "description": "TEST resource description",
+        }
+        created_response = admin_client.post(f"{API}/admin/resources", json=payload)
+        assert created_response.status_code == 200, created_response.text
+        created = created_response.json()
+        assert isinstance(created["resource_id"], str) and created["resource_id"].startswith("res_")
+        assert created["user_id"] == payload["user_id"]
+        assert created["title"] == payload["title"]
+        assert created["url"] == payload["url"]
+        resource_id = created["resource_id"]
+        try:
+            admin_list = admin_client.get(f"{API}/admin/resources", params={"user_id": payload["user_id"]})
+            assert admin_list.status_code == 200
+            assert any(item["resource_id"] == resource_id and item["title"] == payload["title"] for item in admin_list.json())
+            client_list = client_context["session"].get(f"{API}/client/resources")
+            assert client_list.status_code == 200
+            assert any(item["resource_id"] == resource_id and item["url"] == payload["url"] for item in client_list.json())
+            timeline = client_context["session"].get(f"{API}/client/timeline")
+            assert timeline.status_code == 200
+            assert any(event["type"] == "resource" and payload["title"] in event["label"] for event in timeline.json())
+
+            deleted = admin_client.delete(f"{API}/admin/resources/{resource_id}")
+            assert deleted.status_code == 200 and deleted.json() == {"ok": True}
+            assert not any(item["resource_id"] == resource_id for item in admin_client.get(f"{API}/admin/resources", params={"user_id": payload["user_id"]}).json())
+            assert not any(item["resource_id"] == resource_id for item in client_context["session"].get(f"{API}/client/resources").json())
+        finally:
+            db.resources.delete_one({"resource_id": resource_id})
+
+    def test_deliverable_changes_log_timeline_and_invalid_status_is_rejected(self, admin_client, client_context):
+        marker = uuid.uuid4().hex[:8]
+        session_id = f"TEST_timeline_order_{marker}"
+        db.payment_transactions.insert_one({
+            "session_id": session_id,
+            "customer_email": client_context["email"],
+            "lookup_key": "starter_setup_onetime",
+            "tier_name": "Starter Setup",
+            "amount": 149900,
+            "currency": "usd",
+            "payment_status": "paid",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        try:
+            invalid = admin_client.patch(f"{API}/admin/deliverable", json={"session_id": session_id, "key": "d0", "status": "invalid"})
+            assert invalid.status_code == 422, invalid.text
+            assert "deliverables" not in db.payment_transactions.find_one({"session_id": session_id})
+
+            started = admin_client.patch(f"{API}/admin/deliverable", json={"session_id": session_id, "key": "d0", "status": "in_progress"})
+            assert started.status_code == 200, started.text
+            assert next(item for item in started.json()["deliverables"] if item["key"] == "d0")["status"] == "in_progress"
+            timeline = client_context["session"].get(f"{API}/client/timeline")
+            assert timeline.status_code == 200
+            event = next(item for item in timeline.json() if item["type"] == "deliverable" and "CRM setup" in item["label"])
+            assert event["label"] == "CRM setup — started"
+            assert isinstance(event["at"], str) and event["at"]
+
+            completed = admin_client.patch(f"{API}/admin/deliverable", json={"session_id": session_id, "key": "d0", "status": "complete"})
+            assert completed.status_code == 200
+            timeline_after = client_context["session"].get(f"{API}/client/timeline").json()
+            assert any(item["label"] == "CRM setup — completed" for item in timeline_after)
+        finally:
+            db.activity_log.delete_many({"user_id": client_context["user"]["user_id"]})
+            db.payment_transactions.delete_one({"session_id": session_id})
+
+    def test_notes_and_quarterly_review_save_persist(self, admin_client, client_context):
+        uid = client_context["user"]["user_id"]
+        notes = f"TEST notes {uuid.uuid4().hex[:8]}"
+        review = "2027-01-15"
+        response = admin_client.patch(f"{API}/admin/clients/{uid}", json={"notes": notes, "next_quarterly_review": review})
+        assert response.status_code == 200 and response.json() == {"ok": True}
+        stored = db.users.find_one({"user_id": uid})
+        assert stored["notes"] == notes
+        assert stored["next_quarterly_review"] == review
+        listed = admin_client.get(f"{API}/admin/clients")
+        assert listed.status_code == 200
+        client = next(item for item in listed.json() if item["user_id"] == uid)
+        assert client["notes"] == notes
+        assert client["next_quarterly_review"] == review
