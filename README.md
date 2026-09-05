@@ -1,9 +1,10 @@
 # FloForge
 
-> A CRM and business automation platform built to help small businesses organize customer data and automate repetitive workflows.
+> A full-stack CRM and business automation platform built to help small businesses organize customer data and automate repetitive workflows.
 
 [![Status](https://img.shields.io/badge/status-active%20development-blue)](https://github.com/Json-error/FloForge-Automations-website-v3.0-launch)
-[![License](https://img.shields.io/badge/license-not%20specified-lightgrey)](https://github.com/Json-error/FloForge-Automations-website-v3.0-launch)
+
+**Live demo:** https://floforge.org/
 
 ## Overview
 
@@ -11,14 +12,47 @@ FloForge is a full-stack SaaS project focused on practical business automation. 
 
 This repository contains the current FloForge website/application codebase, including the frontend, backend, automated tests, scripts, and supporting project documentation.
 
-## What FloForge Is Built Around
+## Product Surface
 
-- **CRM workflows** — organize contacts, companies, and business information.
-- **Workflow automation** — reduce repetitive manual tasks and data entry.
-- **Scheduling workflows** — support booking, confirmations, and related follow-up processes.
-- **Business operations** — move information between systems and keep teams informed.
-- **Integrations** — connect the tools businesses already use rather than forcing every process into one application.
-- **Security and account management** — build authentication, permissions, and account controls into the product as it develops.
+The application currently includes a broad operations workspace with:
+
+- **CRM** — leads, contacts, companies, and deals.
+- **Work management** — tasks, calendar, and activity tracking.
+- **Automation** — automation center, templates, runs, and workflow configuration.
+- **Prospecting** — lead discovery and data-source workflows.
+- **Analytics** — reports and operational overview dashboards.
+- **Integrations** — connection management for CRM, scheduling, payments, prospecting, and automation tools.
+- **Data** — CSV import/export workflows.
+- **Billing** — service and recurring-plan management with Stripe.
+- **Account controls** — settings, integrations, billing, and administrative areas.
+
+> Integration availability varies by connector. The UI intentionally distinguishes available, connected, not-connected, and planned integrations rather than presenting every connector as production-ready.
+
+## Screenshots
+
+The best screenshots for this project are the clean product views of the **Overview dashboard**, **Integrations**, **Automation Center**, and **landing page**. Avoid browser chrome, phone status bars, and private data when capturing them.
+
+### Overview dashboard
+
+Show the unified workspace with CRM records, pipeline, tasks, activity, automation, and integration status.
+
+### Integrations
+
+Show the integration layer with CRM, calendar, scheduling, payments, prospecting, and automation connectors.
+
+### Automation Center
+
+Use a populated demo workspace for this screenshot. An empty automation list is intentionally not used as a showcase image.
+
+### Landing page
+
+Show the product positioning and primary call to action.
+
+## Architecture
+
+![FloForge application architecture](docs/architecture.svg)
+
+The project separates the React frontend from server-side functionality and external service integrations.
 
 ## Tech Stack
 
@@ -36,7 +70,7 @@ This repository contains the current FloForge website/application codebase, incl
 
 ### Backend
 
-The repository includes a dedicated `backend/` application alongside the React frontend.
+The repository includes a dedicated `backend/` application alongside the React frontend, including server-side functionality and integration/OAuth flows.
 
 ### Project Tooling
 
@@ -56,6 +90,7 @@ The repository includes a dedicated `backend/` application alongside the React f
 ├── scripts/          # Development and utility scripts
 ├── tests/            # Automated tests
 ├── test_reports/     # Test/report artifacts
+├── docs/             # Developer-facing documentation and diagrams
 ├── design_guidelines.json
 ├── test_result.md
 └── vercel.json
@@ -102,7 +137,7 @@ yarn test
 
 FloForge is an actively developed project. APIs, integrations, authentication, automation workflows, and product features may change as development continues.
 
-The repository should therefore be treated as a development project rather than a promise that every feature listed above is production-ready.
+The repository should therefore be treated as a development project rather than a promise that every feature visible in the product is production-ready.
 
 ## Why This Project Exists
 
@@ -112,22 +147,20 @@ The larger objective is not simply to build another dashboard. It is to make bus
 
 ## Roadmap
 
-Planned areas of development include:
-
 - [ ] Expand CRM functionality
 - [ ] Build additional workflow automation capabilities
 - [ ] Improve scheduling and booking workflows
 - [ ] Expand third-party integrations
 - [ ] Improve authentication and account security
 - [ ] Improve testing and reliability
-- [ ] Improve documentation for developers
+- [ ] Improve developer documentation
 - [ ] Continue refining the user experience
 
 ## Contributing
 
 Issues, feature ideas, bug reports, and technical feedback are welcome.
 
-If you want to contribute, start by opening an issue describing the problem or proposed change. For larger changes, discuss the approach before submitting a pull request.
+For larger changes, open an issue first to discuss the proposed approach before submitting a pull request.
 
 ## Security
 
@@ -135,10 +168,10 @@ Never commit secrets or credentials. Use environment variables for API keys, aut
 
 If you discover a security issue, do not publish sensitive details in a public issue. Contact the project owner privately instead.
 
-## Project Links
+## Links
 
 - **Repository:** https://github.com/Json-error/FloForge-Automations-website-v3.0-launch
-- **Owner:** https://github.com/Json-error
+- **Live demo:** https://floforge.org/
 
 ---
 
