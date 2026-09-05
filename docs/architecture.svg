@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+<rect width="1200" height="650" fill="#f7f7f4"/>
+<text x="70" y="75" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#182235">FloForge — Application Architecture</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="17" fill="#596273">Full-stack CRM and business automation platform</text>
+<g font-family="Arial,sans-serif">
+<rect x="70" y="155" width="300" height="185" rx="14" fill="white" stroke="#d9ddd7"/>
+<text x="100" y="195" font-size="22" font-weight="700" fill="#182235">Frontend</text>
+<text x="100" y="230" font-size="16" fill="#596273">React 19</text><text x="100" y="257" font-size="16" fill="#596273">React Router + Tailwind</text><text x="100" y="284" font-size="16" fill="#596273">Dashboards + CRM UI</text><text x="100" y="311" font-size="16" fill="#596273">Forms, charts, integrations</text>
+<rect x="450" y="155" width="300" height="185" rx="14" fill="white" stroke="#d9ddd7"/>
+<text x="480" y="195" font-size="22" font-weight="700" fill="#182235">Backend</text>
+<text x="480" y="230" font-size="16" fill="#596273">Server-side application</text><text x="480" y="257" font-size="16" fill="#596273">API + OAuth flows</text><text x="480" y="284" font-size="16" fill="#596273">Business logic</text><text x="480" y="311" font-size="16" fill="#596273">Integration services</text>
+<rect x="830" y="155" width="300" height="185" rx="14" fill="white" stroke="#d9ddd7"/>
+<text x="860" y="195" font-size="22" font-weight="700" fill="#182235">External Systems</text>
+<text x="860" y="230" font-size="16" fill="#596273">HubSpot</text><text x="860" y="257" font-size="16" fill="#596273">Make.com</text><text x="860" y="284" font-size="16" fill="#596273">Stripe + scheduling tools</text><text x="860" y="311" font-size="16" fill="#596273">Prospecting / data sources</text>
+<path d="M370 248 H450 M750 248 H830" stroke="#8b918b" stroke-width="3"/>
+<rect x="250" y="405" width="700" height="150" rx="14" fill="#182235"/>
+<text x="285" y="447" font-size="22" font-weight="700" fill="white">Core product domains</text>
+<text x="285" y="480" font-size="16" fill="#d7dce5">Leads · Contacts · Companies · Deals · Tasks</text><text x="285" y="507" font-size="16" fill="#d7dce5">Automations · Calendar · Activity · Reports · Billing</text><text x="285" y="534" font-size="16" fill="#d7dce5">Import/export · Account settings · Integrations</text>
+<path d="M220 340 V380 H600 V405 M600 340 V405 M980 340 V380 H600 V405" stroke="#8b918b" stroke-width="3" fill="none"/>
+</g></svg>
