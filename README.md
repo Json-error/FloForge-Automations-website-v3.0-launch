@@ -12,6 +12,18 @@ FloForge is a full-stack SaaS project focused on practical business automation. 
 
 This repository contains the current FloForge website/application codebase, including the frontend, backend, automated tests, scripts, and supporting project documentation.
 
+## Technical Highlights
+
+The project is more than a static CRM interface. Some of the more technically interesting backend capabilities include:
+
+- **HubSpot OAuth integration** — authorization state validation, HubSpot identity lookup, encrypted token storage, access-token refresh handling, and authenticated CRM API access.
+- **Server-side authentication and sessions** — password hashing, persistent sessions, HTTP-only cookies, failed-login tracking, temporary lockouts, logout invalidation, and role-based admin protection.
+- **Persistent customer operations data** — MongoDB-backed users, bookings, messages, payments, activity, resources, growth updates, and integration records.
+- **Availability-aware booking engine** — Arizona-time scheduling, weekday slot generation, past-slot rejection, server-side slot validation, booking conflict checks, and email notification after confirmation.
+- **Unified customer timeline** — combines purchases, training bookings, service updates, activity events, and shared resources into a chronological client view.
+
+These are implementation details of the current codebase; connector availability and automation execution continue to evolve during development.
+
 ## Product Surface
 
 The application currently includes a broad operations workspace with:
@@ -68,7 +80,7 @@ The project separates the React frontend from server-side functionality and exte
 
 ### Backend
 
-The repository includes a dedicated `backend/` application alongside the React frontend, including server-side functionality and integration/OAuth flows.
+The repository includes a dedicated `backend/` application alongside the React frontend, including server-side functionality, persistence, authentication, booking logic, and integration/OAuth flows.
 
 ### Project Tooling
 
