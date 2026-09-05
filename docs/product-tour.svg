@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+<title id="title">FloForge product surface</title>
+<desc id="desc">A visual product tour showing the Overview, Integrations, Billing, and Automations areas of FloForge.</desc>
+<rect width="1400" height="820" fill="#f7f6f2"/>
+<text x="70" y="75" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="700" fill="#171717">FloForge product surface</text>
+<text x="70" y="108" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#666">CRM, operations, automation, integrations, and billing in one workspace.</text>
+
+<g transform="translate(70 145)">
+<rect width="610" height="285" rx="12" fill="#fff" stroke="#d9d7d0"/>
+<rect width="105" height="285" rx="12" fill="#f0efe9"/>
+<text x="20" y="30" font-family="Arial" font-size="13" font-weight="700" fill="#222">OVERVIEW</text>
+<text x="20" y="62" font-family="Arial" font-size="12" fill="#555">Leads</text><text x="20" y="88" font-family="Arial" font-size="12" fill="#555">Contacts</text><text x="20" y="114" font-family="Arial" font-size="12" fill="#555">Companies</text><text x="20" y="140" font-family="Arial" font-size="12" fill="#555">Deals</text><text x="20" y="175" font-family="Arial" font-size="12" fill="#555">Tasks</text><text x="20" y="201" font-family="Arial" font-size="12" fill="#555">Calendar</text><text x="20" y="227" font-family="Arial" font-size="12" fill="#555">Automations</text>
+<text x="135" y="43" font-family="Arial" font-size="24" font-weight="700" fill="#171717">Overview</text>
+<rect x="135" y="64" width="145" height="58" rx="7" fill="#fff" stroke="#ddd"/><text x="147" y="87" font-family="Arial" font-size="10" fill="#777">OPEN PIPELINE</text><text x="147" y="108" font-family="Arial" font-size="19" font-weight="700">$42,500</text>
+<rect x="292" y="64" width="145" height="58" rx="7" fill="#fff" stroke="#ddd"/><text x="304" y="87" font-family="Arial" font-size="10" fill="#777">OPEN DEALS</text><text x="304" y="108" font-family="Arial" font-size="19" font-weight="700">18</text>
+<rect x="449" y="64" width="135" height="58" rx="7" fill="#fff" stroke="#ddd"/><text x="461" y="87" font-family="Arial" font-size="10" fill="#777">OPEN LEADS</text><text x="461" y="108" font-family="Arial" font-size="19" font-weight="700">31</text>
+<rect x="135" y="140" width="449" height="100" rx="7" fill="#fff" stroke="#ddd"/><text x="150" y="166" font-family="Arial" font-size="13" font-weight="700">Today</text><text x="150" y="195" font-family="Arial" font-size="12" fill="#666">Tasks, pipeline, recent leads, activity, and automation status.</text><rect x="150" y="210" width="105" height="22" rx="4" fill="#eee"/><text x="162" y="225" font-family="Arial" font-size="10">Create task</text>
+</g>
+
+<g transform="translate(720 145)">
+<rect width="610" height="285" rx="12" fill="#fff" stroke="#d9d7d0"/>
+<text x="30" y="43" font-family="Arial" font-size="24" font-weight="700" fill="#171717">Integrations</text>
+<text x="30" y="67" font-family="Arial" font-size="13" fill="#777">Connect the systems your workspace already uses.</text>
+<rect x="30" y="86" width="550" height="48" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="115" font-family="Arial" font-size="13">Gmail</text><text x="450" y="115" font-family="Arial" font-size="10" fill="#999">NOT AVAILABLE YET</text>
+<rect x="30" y="142" width="550" height="48" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="171" font-family="Arial" font-size="13">Google Calendar</text><text x="450" y="171" font-family="Arial" font-size="10" fill="#999">NOT AVAILABLE YET</text>
+<rect x="30" y="198" width="550" height="48" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="227" font-family="Arial" font-size="13">HubSpot</text><rect x="472" y="210" width="88" height="24" rx="5" fill="#b54f22"/><text x="483" y="226" font-family="Arial" font-size="10" fill="#fff">SET UP</text>
+</g>
+
+<g transform="translate(70 475)">
+<rect width="610" height="285" rx="12" fill="#fff" stroke="#d9d7d0"/>
+<text x="30" y="43" font-family="Arial" font-size="24" font-weight="700" fill="#171717">Automations</text>
+<text x="30" y="67" font-family="Arial" font-size="13" fill="#777">Rules that run when something happens.</text>
+<rect x="30" y="88" width="550" height="48" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="117" font-family="Arial" font-size="13" font-weight="700">New lead follow-up</text><text x="47" y="133" font-family="Arial" font-size="10" fill="#777">Lead created → assign owner → create task → notify team</text><text x="500" y="117" font-family="Arial" font-size="10" fill="#555">ACTIVE</text>
+<rect x="30" y="146" width="550" height="48" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="175" font-family="Arial" font-size="13" font-weight="700">Appointment reminder</text><text x="47" y="191" font-family="Arial" font-size="10" fill="#777">Upcoming booking → reminder → internal task</text><text x="500" y="175" font-family="Arial" font-size="10" fill="#555">DRAFT</text>
+<rect x="30" y="210" width="550" height="30" rx="5" fill="#eee"/><text x="47" y="230" font-family="Arial" font-size="11" fill="#555">Templates · Runs · Logs · Conditions · Actions</text>
+</g>
+
+<g transform="translate(720 475)">
+<rect width="610" height="285" rx="12" fill="#fff" stroke="#d9d7d0"/>
+<text x="30" y="43" font-family="Arial" font-size="24" font-weight="700" fill="#171717">Billing</text>
+<text x="30" y="67" font-family="Arial" font-size="13" fill="#777">Services and recurring support plans.</text>
+<rect x="30" y="88" width="550" height="50" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="118" font-family="Arial" font-size="13" font-weight="700">Full CRM Setup</text><text x="340" y="118" font-family="Arial" font-size="13">$299 · one-time</text><rect x="500" y="101" width="62" height="25" rx="5" fill="#222"/><text x="512" y="118" font-family="Arial" font-size="10" fill="#fff">PURCHASE</text>
+<rect x="30" y="148" width="550" height="50" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="178" font-family="Arial" font-size="13" font-weight="700">CRM Maintenance</text><text x="340" y="178" font-family="Arial" font-size="13">$99 / month</text><rect x="500" y="161" width="62" height="25" rx="5" fill="#222"/><text x="512" y="178" font-family="Arial" font-size="10" fill="#fff">SUBSCRIBE</text>
+<rect x="30" y="208" width="550" height="50" rx="7" fill="#fafafa" stroke="#ddd"/><text x="47" y="238" font-family="Arial" font-size="13" font-weight="700">Priority Partner</text><text x="340" y="238" font-family="Arial" font-size="13">$249 / month</text><rect x="500" y="221" width="62" height="25" rx="5" fill="#222"/><text x="512" y="238" font-family="Arial" font-size="10" fill="#fff">SUBSCRIBE</text>
+</g>
+</svg>
