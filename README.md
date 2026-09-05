@@ -28,25 +28,23 @@ The application currently includes a broad operations workspace with:
 
 > Integration availability varies by connector. The UI intentionally distinguishes available, connected, not-connected, and planned integrations rather than presenting every connector as production-ready.
 
+## Product Tour
+
+![FloForge product surface](docs/product-tour.svg)
+
+The product tour summarizes the main application surfaces visible in the current build: the operations overview, integration management, automation center, and billing area.
+
+For the live interface, visit **https://floforge.org/**.
+
 ## Screenshots
 
-The best screenshots for this project are the clean product views of the **Overview dashboard**, **Integrations**, **Automation Center**, and **landing page**. Avoid browser chrome, phone status bars, and private data when capturing them.
+Clean product screenshots should focus on the interface itself rather than browser chrome, phone status bars, or private data. Recommended showcase views:
 
-### Overview dashboard
-
-Show the unified workspace with CRM records, pipeline, tasks, activity, automation, and integration status.
-
-### Integrations
-
-Show the integration layer with CRM, calendar, scheduling, payments, prospecting, and automation connectors.
-
-### Automation Center
-
-Use a populated demo workspace for this screenshot. An empty automation list is intentionally not used as a showcase image.
-
-### Landing page
-
-Show the product positioning and primary call to action.
+1. **Overview dashboard** — CRM records, pipeline, tasks, activity, automation, and integration status.
+2. **Integrations** — CRM, calendar, scheduling, payments, prospecting, and automation connectors.
+3. **Automation Center** — preferably with a fictional/demo automation and run history populated.
+4. **Billing** — service packages and recurring support plans.
+5. **Landing page** — product positioning and primary call to action.
 
 ## Architecture
 
